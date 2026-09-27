@@ -3,11 +3,18 @@
 # ---------- build stage ----------
 # Astro inlines import.meta.env at build time; secrets are NOT passed here —
 # they are injected at runtime (see docker-compose.yml) via process.env.
-# Bun pinned to 1.4.2 (matches bun.lock). The content store uses
-# better-sqlite3, whose N-API binding runs identically under Bun — no Node
-# needed in the image (`bun run` aliases node → bun for the astro CLI).
+# Bun pinned to 1.4.2 (matches bun.lock).
+#
+# python3/make/g++ are required because better-sqlite3's prebuilt binary
+# does not load under Bun's node shim (ABI mismatch) and its install script
+# falls back to a node-gyp source build — which needs a full toolchain. The
+# compiled N-API binding is glibc-compatible with the debian runtime stage.
 FROM oven/bun:1.4.2 AS build
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json bun.lock ./
 # better-sqlite3's postinstall (prebuild-install) is allowed via the
