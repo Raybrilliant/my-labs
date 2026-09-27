@@ -138,7 +138,7 @@
                 class="field-input"
                 type="text"
                 autocomplete="name"
-                placeholder="ADA LOVELACE"
+                placeholder="INI BUDI"
                 bind:value={name}
                 required
                 maxlength={200}
@@ -152,7 +152,7 @@
                 class="field-input"
                 type="email"
                 autocomplete="email"
-                placeholder="ADA@ANALYTICAL.ENG"
+                placeholder="BUDI@SANTOSO.IND"
                 bind:value={email}
                 required
                 maxlength={320}
