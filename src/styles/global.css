@@ -442,54 +442,339 @@ html.rl-visited .hl-line-neon {
     @apply pointer-events-none absolute inset-0 bg-concrete-50 opacity-25 mix-blend-lighten;
   }
 
-  /* Portrait glitch on hover — two chromatic ghosts */
-  .glitch-hover {
+  /* ============================================================
+     NEON PORTRAIT — team photos strike from red-duotone mono to full
+     color like a neon tube: slow weak flicks building up, lock on and
+     breathe while hovered, sputter out when the pointer leaves.
+     .neon-live / .neon-dying are set in Team.astro; plain :hover covers
+     no-JS, reduced motion falls back to the simple crossfade below.
+     ============================================================ */
+  .neon-portrait {
     @apply relative;
   }
+  /* Glow paints on a pseudo so it never fights the hard offset shadow */
+  .neon-portrait::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0;
+  }
+  /* Fallback crossfade (also the reduced-motion path) */
+  .duotone img,
+  .duotone::before,
+  .duotone::after {
+    transition: filter 0.6s ease, opacity 0.6s ease;
+  }
+  .neon-portrait:hover .duotone img {
+    filter: grayscale(0);
+  }
+  .neon-portrait:hover .duotone::before,
+  .neon-portrait:hover .duotone::after {
+    opacity: 0;
+  }
   @media (prefers-reduced-motion: no-preference) {
-    .glitch-hover::before,
-    .glitch-hover::after {
-      content: "";
-      @apply pointer-events-none absolute inset-0 opacity-0;
-      background: var(--color-signal);
-      mix-blend-mode: screen;
-      transition: opacity 0.1s;
+    .neon-portrait:hover .duotone img,
+    .neon-portrait.neon-live .duotone img {
+      animation:
+        np-img-strike 1.5s ease-in-out both,
+        np-img-live 3.2s ease-in-out 1.5s infinite;
     }
-    .glitch-hover:hover::before {
-      opacity: 0.5;
-      animation: glitch-a 0.4s steps(2) infinite;
+    .neon-portrait.neon-dying .duotone img {
+      animation: np-img-die 0.95s ease-in-out both;
     }
-    .glitch-hover:hover::after {
-      opacity: 0.3;
-      animation: glitch-b 0.35s steps(2) infinite reverse;
+    .neon-portrait:hover .duotone::before,
+    .neon-portrait.neon-live .duotone::before {
+      animation: np-tint-strike 1.5s ease-in-out both;
+    }
+    .neon-portrait.neon-dying .duotone::before {
+      animation: np-tint-die 0.95s ease-in-out both;
+    }
+    .neon-portrait:hover .duotone::after,
+    .neon-portrait.neon-live .duotone::after {
+      animation: np-tint2-strike 1.5s ease-in-out both;
+    }
+    .neon-portrait.neon-dying .duotone::after {
+      animation: np-tint2-die 0.95s ease-in-out both;
+    }
+    .neon-portrait:hover::after,
+    .neon-portrait.neon-live::after {
+      animation:
+        np-glow-strike 1.5s ease-in-out both,
+        np-glow-breathe 3.2s ease-in-out 1.5s infinite;
+    }
+    .neon-portrait.neon-dying::after {
+      animation: np-glow-die 0.95s ease-in-out both;
     }
   }
-  @keyframes glitch-a {
-    0% {
-      transform: translate(-4px, 2px);
-      clip-path: inset(10% 0 60% 0);
+
+  /* Ignition ramp — the np-img-die curve played backwards: same partial
+     sputter rhythm as the power-down, mirrored. Grayscale drains as the
+     tube catches; mid dips never return to full mono, so it reads as one
+     smooth strike instead of harsh blinking. */
+  @keyframes np-img-strike {
+    0%,
+    12% {
+      filter: grayscale(100%) brightness(1);
     }
-    50% {
-      transform: translate(3px, -2px);
-      clip-path: inset(55% 0 15% 0);
+    22% {
+      filter: grayscale(85%) brightness(0.95);
+    }
+    32% {
+      filter: grayscale(20%) brightness(1.04) saturate(1.1);
+    }
+    44% {
+      filter: grayscale(70%) brightness(0.92);
+    }
+    56% {
+      filter: grayscale(0%) brightness(1.06) saturate(1.1);
+    }
+    68% {
+      filter: grayscale(55%) brightness(1.12);
     }
     100% {
-      transform: translate(-2px, 1px);
-      clip-path: inset(30% 0 40% 0);
+      filter: grayscale(0%) brightness(1) saturate(1.05);
     }
   }
-  @keyframes glitch-b {
-    0% {
-      transform: translate(4px, -1px);
-      clip-path: inset(60% 0 5% 0);
+  /* Live current — barely-there pulse once the tube holds */
+  @keyframes np-img-live {
+    0%,
+    100% {
+      filter: grayscale(0%) brightness(1) saturate(1.05);
     }
     50% {
-      transform: translate(-3px, 2px);
-      clip-path: inset(5% 0 70% 0);
+      filter: grayscale(0%) brightness(1.04) saturate(1.2);
+    }
+  }
+  /* Power-down sputter — final frame equals the resting duotone exactly */
+  @keyframes np-img-die {
+    0%,
+    12% {
+      filter: grayscale(0%) brightness(1) saturate(1.05);
+    }
+    22% {
+      filter: grayscale(55%) brightness(1.12);
+    }
+    32% {
+      filter: grayscale(0%) brightness(1.06) saturate(1.1);
+    }
+    44% {
+      filter: grayscale(70%) brightness(0.92);
+    }
+    56% {
+      filter: grayscale(20%) brightness(1.04) saturate(1.1);
+    }
+    68% {
+      filter: grayscale(85%) brightness(0.95);
     }
     100% {
-      transform: translate(2px, -2px);
-      clip-path: inset(40% 0 30% 0);
+      filter: grayscale(100%) brightness(1);
+    }
+  }
+
+  /* Red duotone overlay — reversed np-tint-die (::before rests at .6) */
+  @keyframes np-tint-strike {
+    0%,
+    12% {
+      opacity: 0.6;
+    }
+    22% {
+      opacity: 0.45;
+    }
+    32% {
+      opacity: 0.15;
+    }
+    44% {
+      opacity: 0.4;
+    }
+    56% {
+      opacity: 0.05;
+    }
+    68% {
+      opacity: 0.35;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  /* Paper-lift overlay — reversed np-tint2-die (::after rests at .25) */
+  @keyframes np-tint2-strike {
+    0%,
+    12% {
+      opacity: 0.25;
+    }
+    22% {
+      opacity: 0.2;
+    }
+    32% {
+      opacity: 0.08;
+    }
+    44% {
+      opacity: 0.18;
+    }
+    56% {
+      opacity: 0.02;
+    }
+    68% {
+      opacity: 0.15;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes np-tint-die {
+    0%,
+    12% {
+      opacity: 0;
+    }
+    22% {
+      opacity: 0.35;
+    }
+    32% {
+      opacity: 0.05;
+    }
+    44% {
+      opacity: 0.4;
+    }
+    56% {
+      opacity: 0.15;
+    }
+    68% {
+      opacity: 0.45;
+    }
+    100% {
+      opacity: 0.6;
+    }
+  }
+  @keyframes np-tint2-die {
+    0%,
+    12% {
+      opacity: 0;
+    }
+    22% {
+      opacity: 0.15;
+    }
+    32% {
+      opacity: 0.02;
+    }
+    44% {
+      opacity: 0.18;
+    }
+    56% {
+      opacity: 0.08;
+    }
+    68% {
+      opacity: 0.2;
+    }
+    100% {
+      opacity: 0.25;
+    }
+  }
+
+  /* Frame glow — reversed np-glow-die: same sputter, mirrored, ending
+     at the full breathe state */
+  @keyframes np-glow-strike {
+    0%,
+    12% {
+      box-shadow:
+        0 0 0.3rem transparent,
+        0 0 0.9rem transparent,
+        0 0 2rem transparent;
+    }
+    22% {
+      box-shadow:
+        0 0 0.2rem color-mix(in srgb, var(--color-signal) 38%, transparent),
+        0 0 0.55rem color-mix(in srgb, var(--color-signal) 24%, transparent),
+        0 0 1.2rem color-mix(in srgb, var(--color-signal) 14%, transparent);
+    }
+    32% {
+      box-shadow:
+        0 0 0.28rem color-mix(in srgb, var(--color-signal) 88%, transparent),
+        0 0 0.8rem color-mix(in srgb, var(--color-signal) 60%, transparent),
+        0 0 1.7rem color-mix(in srgb, var(--color-signal) 36%, transparent);
+    }
+    44% {
+      box-shadow:
+        0 0 0.22rem color-mix(in srgb, var(--color-signal) 42%, transparent),
+        0 0 0.6rem color-mix(in srgb, var(--color-signal) 28%, transparent),
+        0 0 1.3rem color-mix(in srgb, var(--color-signal) 16%, transparent);
+    }
+    56% {
+      box-shadow:
+        0 0 0.3rem color-mix(in srgb, var(--color-signal) 95%, transparent),
+        0 0 0.9rem color-mix(in srgb, var(--color-signal) 78%, transparent),
+        0 0 2rem color-mix(in srgb, var(--color-signal) 48%, transparent);
+    }
+    68% {
+      box-shadow:
+        0 0 0.25rem color-mix(in srgb, var(--color-signal) 45%, transparent),
+        0 0 0.7rem color-mix(in srgb, var(--color-signal) 30%, transparent),
+        0 0 1.5rem color-mix(in srgb, var(--color-signal) 18%, transparent);
+    }
+    100% {
+      box-shadow:
+        0 0 0.3rem var(--color-signal),
+        0 0 0.9rem color-mix(in srgb, var(--color-signal) 80%, transparent),
+        0 0 2rem color-mix(in srgb, var(--color-signal) 50%, transparent);
+    }
+  }
+  /* Steady state: glow breathing like live current */
+  @keyframes np-glow-breathe {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0.3rem var(--color-signal),
+        0 0 0.9rem color-mix(in srgb, var(--color-signal) 80%, transparent),
+        0 0 2rem color-mix(in srgb, var(--color-signal) 50%, transparent);
+    }
+    50% {
+      box-shadow:
+        0 0 0.28rem color-mix(in srgb, var(--color-signal) 90%, transparent),
+        0 0 0.8rem color-mix(in srgb, var(--color-signal) 62%, transparent),
+        0 0 1.7rem color-mix(in srgb, var(--color-signal) 38%, transparent);
+    }
+  }
+  /* Current cut — two dying sputters, ends fully dark */
+  @keyframes np-glow-die {
+    0%,
+    12% {
+      box-shadow:
+        0 0 0.3rem var(--color-signal),
+        0 0 0.9rem color-mix(in srgb, var(--color-signal) 80%, transparent),
+        0 0 2rem color-mix(in srgb, var(--color-signal) 50%, transparent);
+    }
+    22% {
+      box-shadow:
+        0 0 0.25rem color-mix(in srgb, var(--color-signal) 45%, transparent),
+        0 0 0.7rem color-mix(in srgb, var(--color-signal) 30%, transparent),
+        0 0 1.5rem color-mix(in srgb, var(--color-signal) 18%, transparent);
+    }
+    32% {
+      box-shadow:
+        0 0 0.3rem color-mix(in srgb, var(--color-signal) 95%, transparent),
+        0 0 0.9rem color-mix(in srgb, var(--color-signal) 78%, transparent),
+        0 0 2rem color-mix(in srgb, var(--color-signal) 48%, transparent);
+    }
+    44% {
+      box-shadow:
+        0 0 0.22rem color-mix(in srgb, var(--color-signal) 42%, transparent),
+        0 0 0.6rem color-mix(in srgb, var(--color-signal) 28%, transparent),
+        0 0 1.3rem color-mix(in srgb, var(--color-signal) 16%, transparent);
+    }
+    56% {
+      box-shadow:
+        0 0 0.28rem color-mix(in srgb, var(--color-signal) 88%, transparent),
+        0 0 0.8rem color-mix(in srgb, var(--color-signal) 60%, transparent),
+        0 0 1.7rem color-mix(in srgb, var(--color-signal) 36%, transparent);
+    }
+    68% {
+      box-shadow:
+        0 0 0.2rem color-mix(in srgb, var(--color-signal) 38%, transparent),
+        0 0 0.55rem color-mix(in srgb, var(--color-signal) 24%, transparent),
+        0 0 1.2rem color-mix(in srgb, var(--color-signal) 14%, transparent);
+    }
+    100% {
+      box-shadow:
+        0 0 0.3rem transparent,
+        0 0 0.9rem transparent,
+        0 0 2rem transparent;
     }
   }
 }

@@ -24,7 +24,7 @@ const { team } = await readContent();
                     class={`group md:col-span-5 ${i % 2 === 1 ? 'md:col-start-8' : ''}`}
                     data-reveal
                 >
-                    <div class="glitch-hover shadow-hard border-2 border-concrete-900">
+                    <div class="neon-portrait shadow-hard border-2 border-concrete-900">
                         <div class="duotone">
                             <img
                                 src={member.img}
@@ -71,3 +71,26 @@ const { team } = await readContent();
         </div>
     </div>
 </section>
+
+<script>
+    // Neon tube power state — same behavior as the hero headline: hover
+    // strikes the portrait on (.neon-live), leaving lets it sputter out
+    // (.neon-dying) instead of snapping back to mono.
+    const canFlicker = window.matchMedia('(prefers-reduced-motion: no-preference)');
+
+    for (const frame of document.querySelectorAll<HTMLElement>('.neon-portrait')) {
+        frame.addEventListener('mouseenter', () => {
+            frame.classList.add('neon-live');
+            frame.classList.remove('neon-dying');
+        });
+        frame.addEventListener('mouseleave', () => {
+            frame.classList.remove('neon-live');
+            if (canFlicker.matches) frame.classList.add('neon-dying');
+        });
+        frame.addEventListener('animationend', (e) => {
+            if ((e as AnimationEvent).animationName === 'np-glow-die') {
+                frame.classList.remove('neon-dying');
+            }
+        });
+    }
+</script>
