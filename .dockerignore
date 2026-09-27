@@ -1,7 +1,9 @@
 node_modules
 dist
 .astro
-data
+# root-level runtime data dir only (DB + uploads) — src/data/ seed content must ship
+/data
+!src/data
 .env
 .env.*
 !.env.example

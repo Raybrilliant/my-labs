@@ -19,7 +19,9 @@ pnpm-debug.log*
 .env.example
 
 # server-side content store (admin-managed live data)
+# root-anchored: src/data/ holds build-time seed content and MUST be tracked
 data/
+!src/data/
 
 # macOS-specific files
 .DS_Store
