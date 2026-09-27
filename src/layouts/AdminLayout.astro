@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+import '@fontsource/anton';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/700.css';
+
+interface Props {
+  title: string;
+  active: 'dashboard' | 'projects' | 'services' | 'team';
+}
+
+const { title, active } = Astro.props;
+
+const nav = [
+    { href: '/admin', label: 'DASHBOARD', key: 'dashboard' },
+    { href: '/admin/projects', label: 'PROJECTS', key: 'projects' },
+    { href: '/admin/services', label: 'SERVICES', key: 'services' },
+    { href: '/admin/team', label: 'TEAM', key: 'team' },
+] as const;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <title>{title} — RAYBRILLIANT LABS ADMIN</title>
+    </head>
+    <body class="min-h-svh bg-concrete-100 font-mono text-concrete-900">
+        <header class="border-b-2 border-concrete-900 bg-concrete-50">
+            <div class="shell flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4">
+                <a href="/admin" class="font-display text-lg tracking-wide uppercase md:text-xl">
+                    RAYBRILLIANT<span class="text-signal">®</span>LABS
+                    <span class="font-mono text-[10px] tracking-[0.3em] text-concrete-600"
+                        >/ ADMIN</span
+                    >
+                </a>
+                <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] tracking-widest">
+                    {
+                        nav.map((item) => (
+                            <a
+                                href={item.href}
+                                class:list={[
+                                    'transition-colors hover:text-signal',
+                                    active === item.key && 'text-signal underline underline-offset-4',
+                                ]}
+                            >
+                                {item.label}
+                            </a>
+                        ))
+                    }
+                    <a href="/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-signal">
+                        VIEW SITE ↗
+                    </a>
+                    <form method="POST" action="/api/admin/logout">
+                        <button
+                            type="submit"
+                            class="cursor-pointer border-2 border-concrete-900 bg-concrete-900 px-2 py-1 text-[10px] tracking-widest text-concrete-50 uppercase transition-colors hover:border-signal hover:bg-signal"
+                        >
+                            LOGOUT
+                        </button>
+                    </form>
+                </nav>
+            </div>
+        </header>
+
+        <main class="shell py-10 md:py-14">
+            <slot />
+        </main>
+
+        <footer class="border-t-2 border-concrete-900 py-5">
+            <div class="shell font-mono text-[10px] tracking-[0.25em] text-concrete-600 uppercase">
+                EDITS WRITE TO data/content.json ON THE SERVER — PUBLIC PAGES UPDATE IMMEDIATELY.
+                NO REBUILD NEEDED.
+            </div>
+        </footer>
+    </body>
+</html>

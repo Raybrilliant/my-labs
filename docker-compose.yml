@@ -1,0 +1,21 @@
+services:
+  web:
+    build: .
+    # For Docker Hub: `docker compose build` then `docker compose push`.
+    # Set DOCKERHUB_USER in .env to your hub username.
+    image: ${DOCKERHUB_USER:-raybrilliantlabs}/raybrilliant-labs:latest
+    ports:
+      - '4321:4321'
+    environment:
+      # Compose reads these from .env next to this file.
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      DB_PATH: /app/data/raybrilliant.db
+    volumes:
+      # Named volume — DB and uploads survive image rebuilds.
+      - raybrilliant-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  raybrilliant-data:

@@ -1,12 +1,18 @@
 ## Development
 
-When starting the dev server, use background mode:
+**Runtime:** plain **Node >= 22.12** — the content store uses `better-sqlite3`
+(see `src/utils/db.ts`), a prebuilt native binding that works under Node and
+Bun alike. Standard scripts, no runtime flags needed:
 
 ```
-astro dev --background
+npm run dev      # foreground dev server (or: bun run dev)
+npm run build    # -> dist/client + dist/server
+npm run start    # node ./dist/server/entry.mjs
 ```
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+Bun can still be used as the package manager (`bun install`, `bun.lock`) —
+only the `bun:*` runtime APIs are gone. `package-lock.json` is kept in sync
+for the Docker build (`npm ci`).
 
 ## Documentation
 

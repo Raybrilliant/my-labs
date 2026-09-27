@@ -1,0 +1,286 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Footer from '../../components/astro/Footer.astro';
+import Marquee from '../../components/astro/Marquee.astro';
+import { readContent, type Project, type TypefaceEntry } from '../../utils/store';
+
+// Server-rendered per request so admin edits appear instantly.
+export const prerender = false;
+
+interface Props {
+  project: Project;
+}
+
+const { slug } = Astro.params;
+const { projects } = await readContent();
+const project = projects.find((p) => p.slug === slug);
+
+if (!project) {
+  return new Response(
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>404 — RAYBRILLIANT LABS</title></head><body style="font-family:monospace;background:#F5F3EF;color:#1A1815;display:grid;place-items:center;min-height:100svh"><div><p>[ 404 / CASE FILE NOT FOUND ]</p><p><a href="/" style="color:#FF2E1F">← BACK TO BASE</a></p></div></body></html>`,
+    { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+  );
+}
+
+const idx = projects.findIndex((p) => p.slug === project.slug);
+const prev = projects[(idx - 1 + projects.length) % projects.length];
+const next = projects[(idx + 1) % projects.length];
+const caseNo = String(idx + 1).padStart(2, '0');
+
+const typefaceClass: Record<TypefaceEntry['kind'], string> = {
+  display: 'font-display uppercase',
+  mono: 'font-mono',
+  body: 'font-sans',
+};
+---
+
+<BaseLayout
+  title={`${project.name} — CASE STUDY ${caseNo} — RAYBRILLIANT LABS`}
+  description={project.desc}
+>
+  <main class="bg-concrete-50">
+    <!-- case file bar -->
+    <div
+      class="border-b-2 border-concrete-900 bg-concrete-50"
+    >
+      <div
+        class="shell flex flex-wrap items-center justify-between gap-3 py-4 font-mono text-[10px] tracking-[0.25em] text-concrete-900 uppercase md:text-[11px]"
+      >
+        <a
+          href="/#projects"
+          class="transition-colors duration-100 hover:bg-signal hover:text-concrete-50"
+          data-cursor-label="BACK ←"
+        >
+          [ ← BACK TO SELECTED WORK ]
+        </a>
+        <p class="text-concrete-600">CASE FILE {caseNo} / {String(projects.length).padStart(2, '0')} — {project.year}</p>
+      </div>
+    </div>
+
+    <!-- hero -->
+    <header class="shell pt-12 pb-12 md:pt-16 md:pb-16">
+      <p class="font-mono text-xs tracking-[0.3em] text-concrete-600 uppercase" data-reveal>
+        [ CASE STUDY ]
+      </p>
+      <h1
+        class="mt-5 font-display uppercase leading-[0.9] text-concrete-900 text-[clamp(2.75rem,10vw,9rem)]"
+      >
+        <span class="block overflow-hidden pb-[0.06em]">
+          <span class="block" data-reveal="clip">{project.name}</span>
+        </span>
+      </h1>
+      <div class="mt-7 flex flex-wrap items-center gap-3 font-mono text-[10px] tracking-widest uppercase md:text-[11px]" data-reveal>
+        <span class="border-2 border-concrete-900 bg-signal px-2 py-1 text-concrete-50">
+          {project.type}
+        </span>
+        <span class="border-2 border-concrete-900 px-2 py-1 text-concrete-900">{project.client}</span>
+        <span class="border-2 border-dashed border-concrete-600 px-2 py-1 text-concrete-600">
+          STACK: <span class="text-signal font-bold">CLASSIFIED</span>
+        </span>
+        {
+          project.liveUrl && (
+            <a
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="border-2 border-concrete-900 bg-concrete-100 px-2 py-1 text-concrete-900 shadow-hard transition-all hover:bg-signal hover:text-concrete-50 hover:shadow-hard-red"
+              data-cursor-label="VISIT ↗"
+            >
+              VISIT LIVE SITE ↗
+            </a>
+          )
+        }
+      </div>
+    </header>
+
+    <!-- hero image -->
+    <div class="shell" data-reveal>
+      <div class="shadow-hard border-2 border-concrete-900 bg-concrete-100">
+        <img
+          src={project.img}
+          alt={project.alt}
+          width="1200"
+          height="900"
+          loading="eager"
+          decoding="async"
+          class="aspect-[4/3] w-full object-cover md:aspect-[21/9]"
+        />
+      </div>
+    </div>
+
+    <!-- classified stamp -->
+    <div class="shell mt-10 md:mt-14" data-reveal>
+      <p
+        class="inline-block -rotate-1 border-2 border-concrete-900 bg-concrete-100 px-3 py-1.5 font-mono text-[10px] font-bold tracking-[0.2em] text-concrete-900 uppercase md:text-[11px]"
+      >
+        TECH STACK: <span class="text-signal">CLASSIFIED</span> — WE BUILD BLEEDING-EDGE, FAST,
+        EFFICIENT. THE KITCHEN STAYS CLOSED.
+      </p>
+    </div>
+
+    <!-- 01 / THE BRIEF -->
+    <section class="shell mt-16 grid gap-8 border-t-2 border-concrete-900 pt-10 md:mt-24 md:grid-cols-12 md:pt-14">
+      <p class="font-mono text-xs tracking-[0.3em] text-concrete-900 uppercase md:col-span-3" data-reveal>
+        [ 01 / THE BRIEF ]
+      </p>
+      <div class="md:col-span-9">
+        <p class="max-w-2xl text-lg leading-relaxed text-concrete-900" data-reveal>
+          {project.briefIntro}
+        </p>
+        <ul class="mt-8 border-t-2 border-concrete-900" data-reveal-group>
+          {
+            project.brief.map((line) => (
+              <li
+                class="flex items-start gap-4 border-b-2 border-concrete-900 py-4 font-mono text-xs tracking-widest text-concrete-900 uppercase md:text-sm"
+                data-reveal-item
+              >
+                <span class="text-signal" aria-hidden="true">→</span>
+                {line}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- 02 / PALETTE -->
+    <section class="shell mt-16 grid gap-8 border-t-2 border-concrete-900 pt-10 md:mt-24 md:grid-cols-12 md:pt-14">
+      <p class="font-mono text-xs tracking-[0.3em] text-concrete-900 uppercase md:col-span-3" data-reveal>
+        [ 02 / PALETTE ]
+      </p>
+      <div class="grid grid-cols-2 gap-4 md:col-span-9 md:grid-cols-4" data-reveal-group>
+        {
+          project.palette.map((swatch) => (
+            <div class="border-2 border-concrete-900 shadow-hard" data-reveal-item>
+              <div
+                class="flex aspect-square items-end p-3"
+                style={`background-color: ${swatch.hex};`}
+              >
+                <p
+                  class="font-mono text-[10px] font-bold tracking-widest uppercase"
+                  style={`color: ${swatch.ink};`}
+                >
+                  {swatch.name}
+                </p>
+              </div>
+              <p class="border-t-2 border-concrete-900 bg-concrete-50 px-3 py-1.5 font-mono text-[10px] tracking-widest text-concrete-600 uppercase">
+                {swatch.hex}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- 03 / TYPE -->
+    <section class="shell mt-16 grid gap-8 border-t-2 border-concrete-900 pt-10 md:mt-24 md:grid-cols-12 md:pt-14">
+      <p class="font-mono text-xs tracking-[0.3em] text-concrete-900 uppercase md:col-span-3" data-reveal>
+        [ 03 / TYPE ]
+      </p>
+      <ul class="border-t-2 border-concrete-900 md:col-span-9" data-reveal-group>
+        {
+          project.typefaces.map((face) => (
+            <li
+              class="flex flex-col gap-2 border-b-2 border-concrete-900 py-5 md:flex-row md:items-baseline md:justify-between md:gap-8"
+              data-reveal-item
+            >
+              <p
+                class={`text-concrete-900 text-3xl leading-none md:text-5xl ${typefaceClass[face.kind]}`}
+              >
+                {face.name}
+              </p>
+              <p class="font-mono text-[10px] tracking-widest text-concrete-600 uppercase md:text-xs md:text-right">
+                {face.role}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <!-- 04 / DESIGN -->
+    <section class="shell mt-16 grid gap-8 border-t-2 border-concrete-900 pt-10 md:mt-24 md:grid-cols-12 md:pt-14">
+      <p class="font-mono text-xs tracking-[0.3em] text-concrete-900 uppercase md:col-span-3" data-reveal>
+        [ 04 / DESIGN ]
+      </p>
+      <ul class="border-t-2 border-concrete-900 md:col-span-9" data-reveal-group>
+        {
+          project.design.map((line) => (
+            <li
+              class="flex items-start gap-4 border-b-2 border-concrete-900 py-4 font-mono text-xs tracking-widest text-concrete-900 uppercase md:text-sm"
+              data-reveal-item
+            >
+              <span class="text-signal" aria-hidden="true">→</span>
+              {line}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <!-- 05 / OUTCOME -->
+    <section class="mt-16 border-t-2 border-concrete-900 bg-concrete-900 md:mt-24">
+      <div class="shell grid gap-8 py-10 md:grid-cols-12 md:py-14">
+        <p class="font-mono text-xs tracking-[0.3em] text-concrete-300 uppercase md:col-span-3" data-reveal>
+          [ 05 / OUTCOME ]
+        </p>
+        <div class="grid gap-6 md:col-span-9 md:grid-cols-3" data-reveal-group>
+          {
+            project.outcome.map((stat) => (
+              <div class="border-2 border-concrete-600 p-5 md:p-6" data-reveal-item>
+                <p class="font-display text-concrete-50 text-5xl leading-none md:text-6xl">
+                  {stat.value}
+                </p>
+                <p class="mt-3 font-mono text-[10px] tracking-widest text-concrete-300 uppercase md:text-xs">
+                  {stat.label}
+                </p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- section transition -->
+    <Marquee items={['MORE CASE FILES', 'NEXT PROJECT', 'KEEP SCROLLING']} duration="20s" />
+
+    <!-- prev / next -->
+    <nav
+      class="shell grid gap-4 py-12 md:grid-cols-2 md:py-16 md:gap-6"
+      aria-label="More projects"
+    >
+      <a
+        href={`/projects/${prev.slug}`}
+        class="group border-2 border-concrete-900 bg-concrete-50 p-6 shadow-hard transition-all duration-150 hover:bg-concrete-900 md:p-8"
+        data-cursor-label="OPEN ←"
+        data-reveal
+      >
+        <p class="font-mono text-[10px] tracking-widest text-concrete-600 uppercase group-hover:text-concrete-300">
+          [ PREV CASE FILE ]
+        </p>
+        <p
+          class="mt-3 font-display text-concrete-900 uppercase text-3xl leading-none transition-colors duration-150 group-hover:text-concrete-50 md:text-4xl"
+        >
+          {prev.name}
+        </p>
+      </a>
+      <a
+        href={`/projects/${next.slug}`}
+        class="group border-2 border-concrete-900 bg-concrete-50 p-6 shadow-hard-red transition-all duration-150 hover:bg-signal md:p-8"
+        data-cursor-label="OPEN →"
+        data-reveal
+      >
+        <p class="font-mono text-[10px] tracking-widest text-concrete-600 uppercase group-hover:text-concrete-50">
+          [ NEXT CASE FILE ]
+        </p>
+        <p
+          class="mt-3 font-display text-concrete-900 uppercase text-3xl leading-none transition-colors duration-150 group-hover:text-concrete-50 md:text-4xl"
+        >
+          {next.name}
+        </p>
+      </a>
+    </nav>
+  </main>
+
+  <Footer />
+</BaseLayout>

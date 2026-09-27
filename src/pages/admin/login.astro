@@ -1,0 +1,75 @@
+---
+import '../../styles/global.css';
+
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <title>LOGIN — RAYBRILLIANT LABS ADMIN</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        />
+    </head>
+    <body class="flex min-h-svh items-center justify-center bg-concrete-100 font-mono text-concrete-900">
+        <form id="login-form" class="w-full max-w-sm border-2 border-concrete-900 bg-concrete-50 p-8 shadow-hard">
+            <p class="font-mono text-[10px] tracking-[0.3em] text-concrete-600 uppercase">
+                RAYBRILLIANT<span class="text-signal">®</span>LABS — RESTRICTED
+            </p>
+            <h1 class="mt-3 font-display text-4xl uppercase">CONTROL<br />ROOM</h1>
+
+            <label for="password" class="mt-8 block text-[10px] tracking-[0.25em] uppercase">
+                ADMIN PASSWORD
+            </label>
+            <input
+                id="password"
+                type="password"
+                required
+                autocomplete="current-password"
+                class="mt-2 w-full border-2 border-concrete-900 bg-concrete-50 px-3 py-2.5 outline-none focus:border-signal"
+            />
+
+            <button
+                type="submit"
+                class="mt-6 w-full cursor-pointer border-2 border-concrete-900 bg-concrete-900 px-3 py-3 text-xs font-bold tracking-[0.2em] text-concrete-50 uppercase shadow-hard-red transition-all hover:border-signal hover:bg-signal"
+            >
+                [ ENTER → ]
+            </button>
+            <p id="error" class="mt-4 hidden text-xs tracking-widest text-signal uppercase"></p>
+        </form>
+
+        <script is:inline>
+            const form = document.getElementById('login-form');
+            const errorEl = document.getElementById('error');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorEl.classList.add('hidden');
+                const password = document.getElementById('password').value;
+                try {
+                    const res = await fetch('/api/admin/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password }),
+                    });
+                    if (res.ok) {
+                        location.href = '/admin';
+                        return;
+                    }
+                    const data = await res.json().catch(() => ({}));
+                    errorEl.textContent = data.error || 'Login failed';
+                } catch {
+                    errorEl.textContent = 'Network error';
+                }
+                errorEl.classList.remove('hidden');
+            });
+        </script>
+    </body>
+</html>

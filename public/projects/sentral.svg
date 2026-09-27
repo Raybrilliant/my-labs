@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="SENTRAL — bold diagonal fashion stripes with an outlined letterform in black, concrete and signal red">
+  <rect width="1200" height="900" fill="#F5F3EF"/>
+  <!-- diagonal bands -->
+  <g>
+    <path d="M-100 900 L500 -100 L640 -100 L40 900 Z" fill="#1A1815"/>
+    <path d="M160 900 L760 -100 L800 -100 L200 900 Z" fill="#FF2E1F"/>
+    <path d="M900 900 L1500 -100 L1440 -100 L840 900 Z" fill="#C9C3B8"/>
+  </g>
+  <!-- giant outlined S -->
+  <text x="620" y="640" font-family="'Anton', 'Arial Black', sans-serif" font-size="720" fill="none" stroke="#1A1815" stroke-width="10">S</text>
+  <!-- price tag chip -->
+  <g transform="rotate(-8 950 180)">
+    <rect x="830" y="120" width="240" height="110" fill="#FF2E1F" stroke="#1A1815" stroke-width="6"/>
+    <circle cx="860" cy="175" r="12" fill="#F5F3EF"/>
+    <text x="890" y="192" font-family="'JetBrains Mono', monospace" font-size="40" font-weight="700" fill="#F5F3EF">NEW</text>
+  </g>
+  <rect x="0" y="820" width="1200" height="80" fill="#F5F3EF"/>
+  <rect x="0" y="820" width="1200" height="6" fill="#1A1815"/>
+  <text x="40" y="876" font-family="'JetBrains Mono', monospace" font-size="28" letter-spacing="8" fill="#1A1815">SENTRAL — FASHION/ECOM</text>
+  <text x="1080" y="876" font-family="'JetBrains Mono', monospace" font-size="28" fill="#FF2E1F">SS26</text>
+</svg>

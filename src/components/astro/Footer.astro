@@ -1,0 +1,144 @@
+---
+import Marquee from "./Marquee.astro";
+
+const year = new Date().getFullYear();
+
+const socials = [
+    { label: "GITHUB", href: "https://github.com/raybrilliant" },
+    { label: "INSTAGRAM", href: "https://instagram.com/" },
+    { label: "X / TWITTER", href: "https://x.com/" },
+];
+
+const nav = [
+    { label: "SERVICES", href: "#services" },
+    { label: "WORK", href: "#projects" },
+    { label: "PROCESS", href: "#process" },
+    { label: "THE LAB", href: "#lab" },
+];
+---
+
+<footer class="bg-concrete-900 text-concrete-50">
+    <Marquee
+        items={[
+            "AVAILABLE FOR NEW PROJECTS",
+            "EST. 2023",
+            "PROBOLINGGO — WORLDWIDE",
+        ]}
+        duration="24s"
+        dark={true}
+        class="border-signal!"
+    />
+
+    <div class="shell py-16 md:py-24">
+        <p
+            class="font-mono text-xs tracking-[0.3em] text-concrete-300 uppercase"
+            data-reveal
+        >
+            [ 07 / END OF FILE ]
+        </p>
+
+        <p
+          class="mt-8 font-display text-concrete-50 uppercase leading-[0.85] whitespace-nowrap text-[clamp(2.25rem,8vw,12rem)]"
+          data-reveal="clip"
+          data-fit-text
+        >
+          RAYBRILLIANT<span class="text-signal">®</span>LABS
+        </p>
+
+        <div class="mt-12 grid gap-10 border-t-2 border-concrete-600 pt-10 md:grid-cols-4">
+            <div class="md:col-span-2">
+                <p class="max-w-sm text-sm leading-relaxed text-concrete-300">
+                    A software development studio for brands that refuse to look
+                    templated. Websites, apps, MVPs — designed loud, engineered
+                    quiet.
+                </p>
+            </div>
+
+            <nav aria-label="Footer">
+                <p class="font-mono text-[10px] tracking-[0.3em] text-concrete-300 uppercase">
+                    SITEMAP
+                </p>
+                <ul class="mt-4 space-y-2 font-mono text-xs tracking-widest">
+                    {nav.map((item) => (
+                        <li>
+                            <a
+                                href={item.href}
+                                class="text-concrete-50 transition-colors duration-100 hover:bg-signal hover:text-concrete-50"
+                            >
+                                {item.label}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+
+            <div>
+                <p class="font-mono text-[10px] tracking-[0.3em] text-concrete-300 uppercase">
+                    ELSEWHERE
+                </p>
+                <ul class="mt-4 space-y-2 font-mono text-xs tracking-widest">
+                    {socials.map((social) => (
+                        <li>
+                            <a
+                                href={social.href}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                                class="text-concrete-50 transition-colors duration-100 hover:bg-signal hover:text-concrete-50"
+                            >
+                                {social.label} ↗
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-14 flex flex-col gap-4 border-t-2 border-concrete-600 pt-6 font-mono text-[10px] tracking-[0.25em] text-concrete-300 uppercase md:flex-row md:items-center md:justify-between">
+            <p>© {year} RAYBRILLIANT LABS — ALL RIGHTS RESERVED</p>
+            <p></p>
+            <button
+                type="button"
+                data-back-to-top
+                class="cursor-pointer appearance-none border-0 bg-transparent p-0 text-concrete-50 transition-colors duration-100 hover:text-signal"
+            >
+                BACK TO TOP ↑
+            </button>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Anchor links to #hero land short of the real top (the hero is pinned by
+    // ScrollTrigger, so its offset comes from the pin-spacer, not y=0).
+    // Scrolling to 0 explicitly always reaches the absolute top.
+    document.querySelectorAll('[data-back-to-top]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+        });
+    });
+
+    // Fit nowrap display text exactly to its container width (the CSS clamp is
+    // only a no-JS fallback — glyph widths make vw guesses unreliable).
+    const fitEl = (el: Element) => {
+        el.style.fontSize = ''; // measure at the stylesheet size, idempotent on refit
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const textWidth = range.getBoundingClientRect().width;
+        const available = el.clientWidth;
+        if (!textWidth || !available) return;
+        const size = parseFloat(getComputedStyle(el).fontSize);
+        el.style.fontSize = `${Math.floor(size * (available / textWidth) * 100) / 100}px`;
+    };
+
+    const fitAll = () => document.querySelectorAll('[data-fit-text]').forEach(fitEl);
+
+    fitAll();
+    document.fonts?.ready.then(fitAll);
+
+    let fitRaf = 0;
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(fitRaf);
+        fitRaf = requestAnimationFrame(fitAll);
+    });
+</script>

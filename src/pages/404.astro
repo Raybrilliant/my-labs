@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/astro/Footer.astro';
+import Marquee from '../components/astro/Marquee.astro';
+
+// Prerendered at build; the node adapter serves it with a real HTTP 404
+// status for unmatched routes — combined with noindex, this avoids
+// Google treating it as a soft-404 or a duplicate content page.
+---
+
+<BaseLayout
+    title="404 — PAGE NOT FOUND — RAYBRILLIANT LABS"
+    description="This page doesn't exist. Head back to the Raybrilliant Labs homepage — a software development studio in Probolinggo, Indonesia building sites, apps and MVPs."
+    noindex
+>
+    <main class="flex min-h-svh flex-col bg-concrete-50">
+        <section class="shell flex flex-1 flex-col justify-center py-20">
+            <p class="font-mono text-xs tracking-[0.3em] text-concrete-600 uppercase" data-reveal>
+                [ ERROR / 404 ]
+            </p>
+
+            <h1
+                class="mt-6 font-display uppercase leading-[0.85] text-concrete-900 text-[clamp(6rem,26vw,20rem)]"
+            >
+                <span class="block overflow-hidden pb-[0.05em]">
+                    <span data-reveal="clip" class="block">404<span class="text-signal">_</span></span>
+                </span>
+            </h1>
+
+            <p
+                class="mt-8 max-w-xl font-mono text-sm leading-relaxed tracking-wide text-concrete-600 uppercase"
+                data-reveal
+            >
+                THIS PAGE DOESN'T EXIST — OR IT MOVED AND DIDN'T TELL US.
+                <span class="text-concrete-900">EITHER WAY: NOTHING TO SEE HERE.</span>
+            </p>
+
+            <div class="mt-10 flex flex-wrap gap-4" data-reveal>
+                <a
+                    href="/"
+                    class="border-2 border-concrete-900 bg-concrete-900 px-6 py-4 font-mono text-xs font-bold tracking-[0.2em] text-concrete-50 uppercase shadow-hard-red transition-all duration-150 hover:-translate-y-0.5 hover:border-signal hover:bg-signal"
+                >
+                    [ BACK TO HOMEPAGE ]
+                </a>
+                <a
+                    href="/#projects"
+                    class="border-2 border-concrete-900 px-6 py-4 font-mono text-xs font-bold tracking-[0.2em] uppercase transition-colors duration-150 hover:bg-concrete-900 hover:text-concrete-50"
+                >
+                    [ VIEW SELECTED WORK → ]
+                </a>
+            </div>
+
+            <nav
+                class="mt-14 border-t-2 border-concrete-900 pt-6 font-mono text-[11px] tracking-[0.25em] uppercase"
+                aria-label="Helpful links"
+                data-reveal
+            >
+                <p class="text-concrete-600">USEFUL EXITS —</p>
+                <ul class="mt-3 flex flex-wrap gap-x-8 gap-y-2">
+                    <li><a class="hover:bg-signal hover:text-concrete-50" href="/#services">SERVICES</a></li>
+                    <li><a class="hover:bg-signal hover:text-concrete-50" href="/#projects">PROJECTS</a></li>
+                    <li><a class="hover:bg-signal hover:text-concrete-50" href="/#process">PROCESS</a></li>
+                    <li><a class="hover:bg-signal hover:text-concrete-50" href="/#lab">THE LAB</a></li>
+                    <li><a class="hover:bg-signal hover:text-concrete-50" href="/#contact">START A PROJECT</a></li>
+                </ul>
+            </nav>
+        </section>
+
+        <Marquee
+            items={['PAGE NOT FOUND', 'ERROR 404', 'NOTHING TO SEE HERE']}
+            dark
+            class="border-b-0"
+        />
+    </main>
+
+    <Footer />
+</BaseLayout>

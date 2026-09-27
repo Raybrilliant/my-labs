@@ -1,0 +1,41 @@
+---
+const links = [
+  { href: '#services', label: 'SERVICES' },
+  { href: '#projects', label: 'WORK' },
+  { href: '#process', label: 'PROCESS' },
+  { href: '#lab', label: 'THE LAB' },
+];
+---
+
+<header class="fixed inset-x-0 top-0 z-50 border-b-2 border-concrete-900 bg-concrete-50">
+  <nav class="shell flex items-center justify-between gap-4 py-3" aria-label="Main">
+    <a
+      href="#hero"
+      class="font-display text-lg tracking-wide uppercase text-concrete-900 transition-colors hover:text-signal md:text-xl"
+    >
+      RAYBRILLIANT<span class="text-signal">®</span>LABS
+    </a>
+
+    <ul class="hidden items-center gap-7 font-mono text-xs tracking-[0.2em] lg:flex">
+      {
+        links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="text-concrete-900 transition-colors duration-100 hover:bg-signal hover:text-concrete-50"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <a
+      href="#contact"
+      class="shadow-hard-red border-2 border-concrete-900 bg-concrete-900 px-3 py-2 font-mono text-[11px] font-bold tracking-[0.15em] text-concrete-50 uppercase transition-all duration-150 hover:-translate-y-0.5 hover:border-signal hover:bg-signal md:px-4"
+    >
+      [ START A PROJECT ]
+    </a>
+  </nav>
+</header>

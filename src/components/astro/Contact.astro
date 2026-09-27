@@ -1,0 +1,17 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import ContactForm from '../svelte/ContactForm.svelte';
+---
+
+<section id="contact" class="section-pad border-b-2 border-concrete-900 bg-concrete-50">
+  <div class="shell">
+    <SectionHeading
+      index="06"
+      label="CONTACT"
+      lines={['GOT A PROJECT?', "LET'S BUILD IT."]}
+      note="THE FORM GOES STRAIGHT TO OUR TELEGRAM. NO FUNNEL. NO DISCOVERY-CALL THEATRE."
+    />
+
+    <ContactForm client:visible />
+  </div>
+</section>

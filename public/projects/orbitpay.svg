@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="OrbitPay — concentric orbital rings with transaction nodes in black, concrete and signal red">
+  <rect width="1200" height="900" fill="#1A1815"/>
+  <g fill="none" stroke="#6B6558" stroke-width="2">
+    <circle cx="600" cy="450" r="140"/>
+    <circle cx="600" cy="450" r="240" stroke-dasharray="14 10"/>
+    <circle cx="600" cy="450" r="340"/>
+  </g>
+  <circle cx="600" cy="450" r="90" fill="#C9C3B8" stroke="#F5F3EF" stroke-width="6"/>
+  <rect x="570" y="420" width="60" height="60" fill="#FF2E1F"/>
+  <!-- orbit nodes -->
+  <rect x="828" y="438" width="26" height="26" fill="#FF2E1F" transform="rotate(45 841 451)"/>
+  <rect x="588" y="196" width="22" height="22" fill="#F5F3EF" transform="rotate(45 599 207)"/>
+  <circle cx="370" cy="620" r="14" fill="#F5F3EF"/>
+  <circle cx="840" cy="250" r="10" fill="#FF2E1F"/>
+  <!-- data ticks -->
+  <g stroke="#6B6558" stroke-width="3">
+    <path d="M80 120 h90 M80 140 h60 M80 160 h110"/>
+    <path d="M1030 760 h90 M1060 780 h60 M1010 780 h40"/>
+  </g>
+  <!-- bar chart footer -->
+  <g fill="#F5F3EF">
+    <rect x="80" y="760" width="34" height="60"/>
+    <rect x="130" y="720" width="34" height="100"/>
+    <rect x="180" y="690" width="34" height="130" fill="#FF2E1F"/>
+    <rect x="230" y="740" width="34" height="80"/>
+  </g>
+  <rect x="920" y="690" width="200" height="130" fill="none" stroke="#FF2E1F" stroke-width="4"/>
+  <text x="944" y="768" font-family="'JetBrains Mono', monospace" font-size="30" fill="#FF2E1F">+128%</text>
+  <rect x="0" y="0" width="1200" height="70" fill="#F5F3EF"/>
+  <text x="40" y="48" font-family="'JetBrains Mono', monospace" font-size="28" letter-spacing="8" fill="#1A1815">ORBITPAY — FINTECH</text>
+</svg>

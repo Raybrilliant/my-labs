@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="MedTrack — clinical grid with a signal-red pulse line and cross motif in black, concrete and red">
+  <rect width="1200" height="900" fill="#C9C3B8"/>
+  <!-- clinical grid -->
+  <g stroke="#1A1815" stroke-width="1.5" opacity="0.25">
+    <path d="M0 150 H1200 M0 300 H1200 M0 450 H1200 M0 600 H1200 M0 750 H1200"/>
+    <path d="M150 0 V900 M300 0 V900 M450 0 V900 M600 0 V900 M750 0 V900 M900 0 V900 M1050 0 V900"/>
+  </g>
+  <!-- phone slab -->
+  <rect x="430" y="120" width="340" height="660" fill="#1A1815"/>
+  <rect x="455" y="150" width="290" height="600" fill="#F5F3EF" stroke="#1A1815" stroke-width="5"/>
+  <!-- app cross -->
+  <rect x="565" y="190" width="70" height="70" fill="#FF2E1F"/>
+  <rect x="585" y="205" width="30" height="10" fill="#F5F3EF"/>
+  <!-- ecg line -->
+  <rect x="475" y="300" width="250" height="200" fill="none" stroke="#1A1815" stroke-width="4"/>
+  <path d="M490 400 h40 l14 -52 l20 96 l18 -70 l14 26 h34 l12 -30 l16 30 h56" fill="none" stroke="#FF2E1F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- appointment rows -->
+  <g>
+    <rect x="475" y="530" width="250" height="34" fill="#1A1815"/>
+    <rect x="475" y="576" width="250" height="34" fill="#C9C3B8" stroke="#1A1815" stroke-width="3"/>
+    <rect x="475" y="622" width="250" height="34" fill="#C9C3B8" stroke="#1A1815" stroke-width="3"/>
+    <circle cx="500" cy="547" r="7" fill="#FF2E1F"/>
+    <circle cx="500" cy="593" r="7" fill="#1A1815"/>
+    <circle cx="500" cy="639" r="7" fill="#1A1815"/>
+  </g>
+  <!-- big background crosses, off-center -->
+  <path d="M950 260 h90 v90 h90 v90 h-90 v90 h-90 v-90 h-90 v-90 h90 Z" fill="none" stroke="#1A1815" stroke-width="8"/>
+  <path d="M140 640 h70 v70 h70 v70 h-70 v70 h-70 v-70 h-70 v-70 h70 Z" fill="#1A1815"/>
+  <rect x="0" y="0" width="1200" height="70" fill="#1A1815"/>
+  <text x="40" y="48" font-family="'JetBrains Mono', monospace" font-size="28" letter-spacing="8" fill="#F5F3EF">MEDTRACK — HEALTH/APP</text>
+  <text x="1120" y="48" font-family="'JetBrains Mono', monospace" font-size="28" fill="#FF2E1F">♥</text>
+</svg>

@@ -1,0 +1,36 @@
+---
+interface Props {
+  index: string;
+  label: string;
+  lines: string[];
+  note?: string;
+}
+
+const { index, label, lines, note } = Astro.props;
+---
+
+<header class="mb-14 md:mb-20">
+  <p class="font-mono text-xs tracking-[0.3em] text-concrete-600 uppercase" data-reveal>
+    [ {index} / {label} ]
+  </p>
+  <h2
+    class="mt-5 font-display uppercase leading-[0.92] text-concrete-900 text-[clamp(2.6rem,7.5vw,6.5rem)]"
+  >
+    {
+      lines.map((line) => (
+        <span class="block overflow-hidden">
+          <span data-reveal="clip" class="block">
+            {line}
+          </span>
+        </span>
+      ))
+    }
+  </h2>
+  {
+    note && (
+      <p class="mt-5 font-mono text-xs tracking-widest text-concrete-600 uppercase" data-reveal>
+        {note}
+      </p>
+    )
+  }
+</header>

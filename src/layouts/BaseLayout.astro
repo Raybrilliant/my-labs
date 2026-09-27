@@ -1,0 +1,136 @@
+---
+import '../styles/global.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/700.css';
+// The display font, inlined as a data URL — the hero headline and the intro
+// loader counter are the LCP elements, and a separate font request means a
+// fallback-font first paint followed by a late font-swap repaint (LCP +0.7s).
+// Base64 costs ~22KB of HTML but paints Anton on the very first frame.
+import antonWoff2 from '@fontsource/anton/files/anton-latin-400-normal.woff2?inline';
+
+// Injected via set:html — `${}` inside a template is literal text to Astro.
+const antonFace =
+  `@font-face{font-family:'Anton';font-style:normal;font-display:swap;font-weight:400;` +
+  `src:url(${antonWoff2}) format('woff2');` +
+  `unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`;
+
+import Grain from '../components/astro/Grain.astro';
+import CustomCursor from '../components/svelte/CustomCursor.svelte';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path or absolute URL of the social-share image. */
+  image?: string;
+  ogType?: 'website' | 'article';
+  /** Keep utility pages (404, etc.) out of the index but crawlable. */
+  noindex?: boolean;
+}
+
+const { title, description, image = '/og.png', ogType = 'website', noindex = false } = Astro.props;
+
+const site = Astro.site ?? new URL('https://labs.raybrilliant.my.id');
+const canonical = new URL(Astro.url.pathname, site);
+const ogImage = new URL(image, site).href;
+
+/** Studio-wide structured data — helps Google tie the site to the business. */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${site.href}#org`,
+      name: 'Raybrilliant Labs',
+      url: site.href,
+      logo: new URL('/og.png', site).href,
+      email: 'hello@raybrilliant.my.id',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Probolinggo',
+        addressRegion: 'East Java',
+        addressCountry: 'ID',
+      },
+      sameAs: ['https://t.me/raybrilliantlabs'],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${site.href}#site`,
+      name: 'Raybrilliant Labs',
+      alternateName: 'Raybrilliant Labs — Software Development Studio',
+      url: site.href,
+      inLanguage: 'en',
+      publisher: { '@id': `${site.href}#org` },
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <style is:inline set:html={antonFace} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#F5F3EF" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'} />
+
+    <!-- Local SEO signals -->
+    <meta name="geo.region" content="ID-JI" />
+    <meta name="geo.placename" content="Probolinggo" />
+
+    <link rel="canonical" href={canonical.href} />
+    <link rel="sitemap" href="/sitemap.xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="Raybrilliant Labs" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Raybrilliant Labs — software development studio in Probolinggo, Indonesia" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Fonts: self-hosted via @fontsource (no third-party blocking CSS) -->
+
+    <!-- Progressive enhancement gates: JS flag + repeat-visitor loader skip -->
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      try {
+        if (sessionStorage.getItem('rl_visited') === '1') {
+          document.documentElement.classList.add('rl-visited');
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <slot />
+
+    <Grain />
+    <CustomCursor client:idle />
+
+    <script>
+      import '../scripts/reveal';
+    </script>
+  </body>
+</html>

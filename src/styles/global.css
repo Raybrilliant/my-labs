@@ -1,0 +1,601 @@
+@import "tailwindcss";
+
+/* ============================================================
+   RAYBRILLIANT LABS — "ABSTRACT BRUTALISM, DIGITALLY NATIVE"
+   Raw concrete + signal red. Hard edges, no soft blurs.
+   ============================================================ */
+
+@theme {
+  /* -- Palette: raw concrete + red signal ------------------- */
+  --color-concrete-50: #f5f3ef;
+  --color-concrete-100: #e8e4dc;
+  --color-concrete-300: #c9c3b8;
+  --color-concrete-600: #6b6558;
+  --color-concrete-900: #1a1815;
+  --color-black: #0d0c0a;
+  --color-signal: #ff2e1f;
+  --color-signal-deep: #c41e13;
+
+  /* -- Type -------------------------------------------------- */
+  --font-display: "Anton", "Arial Black", "Impact", sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", ui-monospace, monospace;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* -- Hard offset shadows (never soft blurs) ---------------- */
+  --shadow-hard: 0.375rem 0.375rem 0 0 var(--color-concrete-900);
+  --shadow-hard-red: 0.375rem 0.375rem 0 0 var(--color-signal);
+  --shadow-hard-red-lg: 0.5rem 0.5rem 0 0 var(--color-signal);
+  --shadow-hard-lg: 0.625rem 0.625rem 0 0 var(--color-concrete-900);
+
+  /* -- Marquee (infinite ticker strips) ---------------------- */
+  --animate-marquee: marquee var(--marquee-duration, 28s) linear infinite;
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* -- Loader blink ------------------------------------------ */
+  --animate-blink: blink 1s steps(2, start) infinite;
+  @keyframes blink {
+    to {
+      visibility: hidden;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-padding-top: 5rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-concrete-50 font-body text-concrete-900 antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: var(--color-signal);
+    color: var(--color-concrete-50);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-concrete-100);
+    border-left: 2px solid var(--color-concrete-900);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-concrete-900);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-signal);
+  }
+
+  /* Hide the native cursor only when the custom one is active */
+  @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    html.cursor-on body,
+    html.cursor-on a,
+    html.cursor-on button,
+    html.cursor-on label,
+    html.cursor-on summary,
+    html.cursor-on [role="button"] {
+      cursor: none;
+    }
+  }
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
+/* Outlined display text — the "hollow" brutalist headline look */
+@utility text-stroke-black {
+  -webkit-text-stroke: 2px var(--color-concrete-900);
+  color: transparent;
+}
+
+@utility text-stroke-red {
+  -webkit-text-stroke: 2px var(--color-signal);
+  color: transparent;
+}
+
+@media (max-width: 767px) {
+  .text-stroke-black,
+  .text-stroke-red {
+    -webkit-text-stroke-width: 1.3px;
+  }
+}
+
+/* Exposed structural grid lines — "showing the seams" */
+@utility bg-blueprint {
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-concrete-900) 7%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: clamp(72px, 8vw, 128px) 100%;
+}
+
+/* ============================================================
+   NEON HEADLINE — hovering the hero headline strikes the outline
+   "LOOK LIKE" line like a real neon tube igniting: slow weak
+   flicks building in strength, then it stays lit and breathes
+   ============================================================ */
+
+/* Ignition ramp — starts from the resting outline state (dark tube),
+   sputters to life with growing flashes, full strike only at the end.
+   Same 4 shadow layers in every frame so every state interpolates
+   smoothly instead of snapping. */
+@keyframes hl-neon-flicker {
+  0%,
+  8% {
+    color: transparent;
+    -webkit-text-stroke-color: var(--color-concrete-900);
+    opacity: 1;
+    text-shadow:
+      0 0 0.04em transparent,
+      0 0 0.14em transparent,
+      0 0 0.34em transparent,
+      0 0 0.7em transparent;
+  }
+  /* First weak ignition attempt */
+  17% {
+    color: color-mix(in srgb, var(--color-signal) 40%, transparent);
+    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 40%, var(--color-concrete-900));
+    opacity: 0.55;
+    text-shadow:
+      0 0 0.03em color-mix(in srgb, var(--color-signal) 28%, transparent),
+      0 0 0.08em color-mix(in srgb, var(--color-signal) 18%, transparent),
+      0 0 0.18em color-mix(in srgb, var(--color-signal) 10%, transparent),
+      0 0 0.35em color-mix(in srgb, var(--color-signal) 6%, transparent);
+  }
+  27% {
+    color: transparent;
+    -webkit-text-stroke-color: var(--color-concrete-900);
+    opacity: 1;
+    text-shadow:
+      0 0 0.04em transparent,
+      0 0 0.14em transparent,
+      0 0 0.34em transparent,
+      0 0 0.7em transparent;
+  }
+  /* Stronger attempt, held a little longer */
+  42% {
+    color: color-mix(in srgb, var(--color-signal) 70%, transparent);
+    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 70%, var(--color-concrete-900));
+    opacity: 0.85;
+    text-shadow:
+      0 0 0.04em color-mix(in srgb, var(--color-signal) 55%, transparent),
+      0 0 0.12em color-mix(in srgb, var(--color-signal) 40%, transparent),
+      0 0 0.26em color-mix(in srgb, var(--color-signal) 24%, transparent),
+      0 0 0.5em color-mix(in srgb, var(--color-signal) 13%, transparent);
+  }
+  52% {
+    color: transparent;
+    -webkit-text-stroke-color: var(--color-concrete-900);
+    opacity: 1;
+    text-shadow:
+      0 0 0.04em transparent,
+      0 0 0.14em transparent,
+      0 0 0.34em transparent,
+      0 0 0.7em transparent;
+  }
+  /* Near-full strike */
+  66% {
+    color: color-mix(in srgb, var(--color-signal) 92%, transparent);
+    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 92%, var(--color-concrete-900));
+    opacity: 0.95;
+    text-shadow:
+      0 0 0.04em color-mix(in srgb, var(--color-signal) 75%, transparent),
+      0 0 0.14em color-mix(in srgb, var(--color-signal) 58%, transparent),
+      0 0 0.34em color-mix(in srgb, var(--color-signal) 38%, transparent),
+      0 0 0.7em color-mix(in srgb, var(--color-signal) 21%, transparent);
+  }
+  /* Settle sag — the tube catches, dips once, locks on */
+  76% {
+    color: color-mix(in srgb, var(--color-signal) 60%, transparent);
+    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 60%, var(--color-concrete-900));
+    opacity: 0.6;
+    text-shadow:
+      0 0 0.03em color-mix(in srgb, var(--color-signal) 48%, transparent),
+      0 0 0.1em color-mix(in srgb, var(--color-signal) 34%, transparent),
+      0 0 0.22em color-mix(in srgb, var(--color-signal) 20%, transparent),
+      0 0 0.45em color-mix(in srgb, var(--color-signal) 11%, transparent);
+  }
+  90% {
+    opacity: 0.94;
+    text-shadow:
+      0 0 0.04em color-mix(in srgb, var(--color-signal) 90%, transparent),
+      0 0 0.14em color-mix(in srgb, var(--color-signal) 72%, transparent),
+      0 0 0.34em color-mix(in srgb, var(--color-signal) 46%, transparent),
+      0 0 0.7em color-mix(in srgb, var(--color-signal) 26%, transparent);
+  }
+  100% {
+    color: var(--color-signal);
+    -webkit-text-stroke-color: var(--color-signal);
+    opacity: 1;
+    text-shadow:
+      0 0 0.04em var(--color-signal),
+      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
+      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
+      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+  }
+}
+
+/* Steady state: barely-there glow breathing, reads as live current */
+@keyframes hl-neon-breathe {
+  0%,
+  100% {
+    text-shadow:
+      0 0 0.04em var(--color-signal),
+      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
+      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
+      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+  }
+  50% {
+    text-shadow:
+      0 0 0.04em color-mix(in srgb, var(--color-signal) 90%, transparent),
+      0 0 0.12em color-mix(in srgb, var(--color-signal) 62%, transparent),
+      0 0 0.28em color-mix(in srgb, var(--color-signal) 38%, transparent),
+      0 0 0.58em color-mix(in srgb, var(--color-signal) 20%, transparent);
+  }
+}
+
+/* Reusable shadow states — 4 layers everywhere so every transition
+   between states interpolates smoothly instead of snapping */
+@keyframes hl-neon-off {
+  0%,
+  12% {
+    color: var(--color-signal);
+    -webkit-text-stroke-color: var(--color-signal);
+    opacity: 1;
+    text-shadow:
+      0 0 0.04em var(--color-signal),
+      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
+      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
+      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+  }
+  22% {
+    opacity: 0.45;
+    text-shadow:
+      0 0 0.03em color-mix(in srgb, var(--color-signal) 45%, transparent),
+      0 0 0.08em color-mix(in srgb, var(--color-signal) 30%, transparent),
+      0 0 0.18em color-mix(in srgb, var(--color-signal) 18%, transparent),
+      0 0 0.35em color-mix(in srgb, var(--color-signal) 10%, transparent);
+  }
+  32% {
+    color: var(--color-signal);
+    -webkit-text-stroke-color: var(--color-signal);
+    opacity: 0.95;
+    text-shadow:
+      0 0 0.04em var(--color-signal),
+      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
+      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
+      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+  }
+  44% {
+    opacity: 0.4;
+    text-shadow:
+      0 0 0.03em color-mix(in srgb, var(--color-signal) 42%, transparent),
+      0 0 0.08em color-mix(in srgb, var(--color-signal) 28%, transparent),
+      0 0 0.16em color-mix(in srgb, var(--color-signal) 16%, transparent),
+      0 0 0.32em color-mix(in srgb, var(--color-signal) 9%, transparent);
+  }
+  56% {
+    opacity: 0.85;
+    text-shadow:
+      0 0 0.04em color-mix(in srgb, var(--color-signal) 88%, transparent),
+      0 0 0.12em color-mix(in srgb, var(--color-signal) 60%, transparent),
+      0 0 0.28em color-mix(in srgb, var(--color-signal) 36%, transparent),
+      0 0 0.56em color-mix(in srgb, var(--color-signal) 19%, transparent);
+  }
+  68% {
+    opacity: 0.3;
+    text-shadow:
+      0 0 0.03em color-mix(in srgb, var(--color-signal) 38%, transparent),
+      0 0 0.07em color-mix(in srgb, var(--color-signal) 24%, transparent),
+      0 0 0.15em color-mix(in srgb, var(--color-signal) 14%, transparent),
+      0 0 0.3em color-mix(in srgb, var(--color-signal) 8%, transparent);
+  }
+  100% {
+    color: transparent;
+    -webkit-text-stroke-color: var(--color-concrete-900);
+    opacity: 1;
+    text-shadow:
+      0 0 0.04em transparent,
+      0 0 0.14em transparent,
+      0 0 0.34em transparent,
+      0 0 0.7em transparent;
+  }
+}
+
+#hero h1:hover .hl-neon,
+#hero h1.neon-live .hl-neon {
+  /* Resting declarations double as the post-animation state — during the
+     animation the keyframes own color/stroke, ramping dark tube → full
+     strike, before handing over to the breathe loop */
+  color: var(--color-signal);
+  -webkit-text-stroke-color: var(--color-signal);
+  animation:
+    hl-neon-flicker 1.5s ease-in-out both,
+    hl-neon-breathe 3.2s ease-in-out 1.5s infinite;
+}
+
+/* Power-down: the tube sputters twice as the current cuts, then goes
+   dark. Final keyframe mirrors the base outline state exactly, so there
+   is no pop when the animation hands back to the resting style. */
+#hero h1.neon-dying .hl-neon {
+  animation: hl-neon-off 0.95s ease-in-out both;
+}
+
+/* Release the reveal mask so the glow blooms past the line box.
+   Repeat visitors never have the mask needed — always open. */
+#hero h1:hover .hl-line-neon,
+#hero h1.neon-live .hl-line-neon,
+#hero h1.neon-dying .hl-line-neon,
+html.rl-visited .hl-line-neon {
+  overflow: visible;
+}
+
+/* ============================================================
+   COMPONENT CLASSES
+   ============================================================ */
+
+@layer components {
+  /* Page shell */
+  .shell {
+    @apply mx-auto w-full max-w-[1600px] px-5 md:px-12;
+  }
+
+  .section-pad {
+    @apply py-24 md:py-36;
+  }
+
+  /* Hard-edged CTA — red offset shadow by default, lifts on hover */
+  .btn-brutal {
+    @apply inline-flex items-center gap-3 border-2 border-concrete-900 bg-concrete-900 px-6 py-4 font-mono text-xs font-bold uppercase tracking-[0.2em] text-concrete-50 shadow-hard-red transition-all duration-150 ease-out;
+  }
+  .btn-brutal:hover {
+    @apply -translate-x-0.5 -translate-y-0.5 border-signal bg-signal shadow-hard-red-lg;
+  }
+  .btn-brutal:active {
+    @apply translate-x-0 translate-y-0 border-signal-deep bg-signal-deep shadow-none;
+  }
+  .btn-brutal:disabled {
+    @apply pointer-events-none opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-3 border-2 border-transparent px-2 py-4 font-mono text-xs font-bold uppercase tracking-[0.2em] text-concrete-900 transition-colors duration-150;
+  }
+  .btn-ghost:hover {
+    @apply text-signal;
+  }
+
+  /* Brutalist form fields — thick underline only */
+  .field-label {
+    @apply mb-1 block font-mono text-[11px] uppercase tracking-[0.25em] text-concrete-600;
+  }
+
+  .field-input {
+    @apply w-full border-0 border-b-2 border-concrete-900 bg-transparent px-0 py-3 font-mono text-sm text-concrete-900 transition-colors duration-150 placeholder:text-concrete-300 focus:border-signal focus:outline-none;
+  }
+
+  select.field-input {
+    @apply cursor-pointer;
+  }
+
+  .radio-pill {
+    @apply inline-block cursor-pointer select-none border-2 border-concrete-900 px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-widest text-concrete-900 transition-all duration-100;
+  }
+  .radio-pill:hover {
+    @apply border-signal bg-signal text-concrete-50;
+  }
+  input:checked + .radio-pill {
+    @apply border-concrete-900 bg-concrete-900 text-concrete-50;
+  }
+  input:focus-visible + .radio-pill {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 3px;
+  }
+
+  /* Services accordion — animated with the grid-rows trick */
+  .svc-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .svc-row[data-open="true"] .svc-body {
+    grid-template-rows: 1fr;
+  }
+  .svc-body > div {
+    overflow: hidden;
+  }
+
+  /* Founder portrait duotone: grayscale -> red multiply -> paper lift */
+  .duotone {
+    @apply relative overflow-hidden;
+  }
+  .duotone img {
+    @apply block w-full grayscale;
+  }
+  .duotone::before {
+    content: "";
+    @apply absolute inset-0 bg-signal opacity-60 mix-blend-multiply;
+  }
+  .duotone::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 bg-concrete-50 opacity-25 mix-blend-lighten;
+  }
+
+  /* Portrait glitch on hover — two chromatic ghosts */
+  .glitch-hover {
+    @apply relative;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .glitch-hover::before,
+    .glitch-hover::after {
+      content: "";
+      @apply pointer-events-none absolute inset-0 opacity-0;
+      background: var(--color-signal);
+      mix-blend-mode: screen;
+      transition: opacity 0.1s;
+    }
+    .glitch-hover:hover::before {
+      opacity: 0.5;
+      animation: glitch-a 0.4s steps(2) infinite;
+    }
+    .glitch-hover:hover::after {
+      opacity: 0.3;
+      animation: glitch-b 0.35s steps(2) infinite reverse;
+    }
+  }
+  @keyframes glitch-a {
+    0% {
+      transform: translate(-4px, 2px);
+      clip-path: inset(10% 0 60% 0);
+    }
+    50% {
+      transform: translate(3px, -2px);
+      clip-path: inset(55% 0 15% 0);
+    }
+    100% {
+      transform: translate(-2px, 1px);
+      clip-path: inset(30% 0 40% 0);
+    }
+  }
+  @keyframes glitch-b {
+    0% {
+      transform: translate(4px, -1px);
+      clip-path: inset(60% 0 5% 0);
+    }
+    50% {
+      transform: translate(-3px, 2px);
+      clip-path: inset(5% 0 70% 0);
+    }
+    100% {
+      transform: translate(2px, -2px);
+      clip-path: inset(40% 0 30% 0);
+    }
+  }
+}
+
+/* ============================================================
+   FILM GRAIN OVERLAY — analog noise, ~4% opacity
+   ============================================================ */
+
+.grain-overlay {
+  position: fixed;
+  inset: -100%;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 0.9s steps(6) infinite;
+}
+
+@keyframes grain-shift {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-3%, 2%);
+  }
+  40% {
+    transform: translate(2%, -3%);
+  }
+  60% {
+    transform: translate(-2%, -2%);
+  }
+  80% {
+    transform: translate(3%, 3%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* ============================================================
+   ANIMATION READINESS (progressive enhancement gates)
+   Content stays visible for no-JS and reduced-motion users;
+   JS/GSAP takes control only when safe.
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    visibility: hidden;
+  }
+  /* Initial hidden states — REPEAT VISITORS ONLY (rl-visited). First visits
+     must paint the hero copy immediately (it sits behind the opaque loader,
+     so nobody sees it): clipped/translated text never paints, and LCP would
+     otherwise wait for hydration + loader + GSAP stagger (~7s throttled).
+     GSAP re-applies these states at hydration, still under the loader, so
+     the entrance choreography is unchanged. Never "fix" visibility with an
+     !important override later — it permanently kills the pin animation. */
+  html.js.rl-visited [data-hero-anim] {
+    opacity: 0;
+  }
+  html.js.rl-visited [data-hero-anim="eyebrow"] {
+    clip-path: inset(0 100% 0 0);
+  }
+  html.js.rl-visited .hero-canvas-wrap {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  html.js.rl-visited .hl-char {
+    transform: translateY(118%);
+  }
+  html.js.rl-visited .hero-meta {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+}
+
+/* Repeat visitors skip the loader panels (fast reveal instead) */
+html.rl-visited .hero-loader,
+html.rl-visited .hero-loader-red {
+  display: none;
+}
+
+/* No-JS safety: nothing would ever remove the loader without JS */
+html:not(.js) .hero-loader,
+html:not(.js) .hero-loader-red {
+  display: none;
+}
+
+/* Reduced motion: loader panels never show */
+@media (prefers-reduced-motion: reduce) {
+  .hero-loader,
+  .hero-loader-red {
+    display: none;
+  }
+  .grain-overlay {
+    animation: none;
+  }
+}
+
+/* Global reduced-motion kill switch */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
