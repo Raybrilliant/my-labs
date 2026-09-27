@@ -3,7 +3,6 @@ name: Docker Hub CI/CD
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch: {}
@@ -37,11 +36,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/raybrilliant-labs
+          # Single rolling tag — the server always pulls :latest.
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix=sha-,format=short
 
       - name: Build & push image
         uses: docker/build-push-action@v6
