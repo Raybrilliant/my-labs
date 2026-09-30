@@ -136,103 +136,71 @@
    flicks building in strength, then it stays lit and breathes
    ============================================================ */
 
-/* Ignition ramp — starts from the resting outline state (dark tube),
-   sputters to life with growing flashes, full strike only at the end.
-   Same 4 shadow layers in every frame so every state interpolates
-   smoothly instead of snapping. */
+/* PERF CONTRACT: the base chars never change style — the glow is a
+   duplicated, pre-lit overlay (.hl-neon-overlay) stacked on top and
+   promoted to its own compositor layer. Every phase animates ONLY
+   `opacity`: animating text-shadow/color repaints the giant headline
+   on the CPU every frame and stalls the WebGL blob, while fading a
+   pre-rendered layer is pure GPU compositing. */
+
+.hl-neon {
+  position: relative;
+  display: inline-block;
+}
+
+/* Pre-lit tube — signal fill, signal stroke, full 4-layer glow.
+   Rendered once; the flicker phases just fade the whole layer. */
+.hl-neon-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  color: var(--color-signal);
+  -webkit-text-stroke-color: var(--color-signal);
+  text-shadow:
+    0 0 0.04em var(--color-signal),
+    0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
+    0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
+    0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* Ignition ramp — weak sputters building to the full strike. Opacity
+   only; the pre-lit layer fades through the same stages the old
+   per-frame shadow repaints used to interpolate. */
 @keyframes hl-neon-flicker {
   0%,
   8% {
-    color: transparent;
-    -webkit-text-stroke-color: var(--color-concrete-900);
-    opacity: 1;
-    text-shadow:
-      0 0 0.04em transparent,
-      0 0 0.14em transparent,
-      0 0 0.34em transparent,
-      0 0 0.7em transparent;
+    opacity: 0;
   }
   /* First weak ignition attempt */
   17% {
-    color: color-mix(in srgb, var(--color-signal) 40%, transparent);
-    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 40%, var(--color-concrete-900));
-    opacity: 0.55;
-    text-shadow:
-      0 0 0.03em color-mix(in srgb, var(--color-signal) 28%, transparent),
-      0 0 0.08em color-mix(in srgb, var(--color-signal) 18%, transparent),
-      0 0 0.18em color-mix(in srgb, var(--color-signal) 10%, transparent),
-      0 0 0.35em color-mix(in srgb, var(--color-signal) 6%, transparent);
+    opacity: 0.5;
   }
   27% {
-    color: transparent;
-    -webkit-text-stroke-color: var(--color-concrete-900);
-    opacity: 1;
-    text-shadow:
-      0 0 0.04em transparent,
-      0 0 0.14em transparent,
-      0 0 0.34em transparent,
-      0 0 0.7em transparent;
+    opacity: 0.08;
   }
   /* Stronger attempt, held a little longer */
   42% {
-    color: color-mix(in srgb, var(--color-signal) 70%, transparent);
-    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 70%, var(--color-concrete-900));
-    opacity: 0.85;
-    text-shadow:
-      0 0 0.04em color-mix(in srgb, var(--color-signal) 55%, transparent),
-      0 0 0.12em color-mix(in srgb, var(--color-signal) 40%, transparent),
-      0 0 0.26em color-mix(in srgb, var(--color-signal) 24%, transparent),
-      0 0 0.5em color-mix(in srgb, var(--color-signal) 13%, transparent);
+    opacity: 0.75;
   }
   52% {
-    color: transparent;
-    -webkit-text-stroke-color: var(--color-concrete-900);
-    opacity: 1;
-    text-shadow:
-      0 0 0.04em transparent,
-      0 0 0.14em transparent,
-      0 0 0.34em transparent,
-      0 0 0.7em transparent;
+    opacity: 0.1;
   }
   /* Near-full strike */
   66% {
-    color: color-mix(in srgb, var(--color-signal) 92%, transparent);
-    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 92%, var(--color-concrete-900));
-    opacity: 0.95;
-    text-shadow:
-      0 0 0.04em color-mix(in srgb, var(--color-signal) 75%, transparent),
-      0 0 0.14em color-mix(in srgb, var(--color-signal) 58%, transparent),
-      0 0 0.34em color-mix(in srgb, var(--color-signal) 38%, transparent),
-      0 0 0.7em color-mix(in srgb, var(--color-signal) 21%, transparent);
+    opacity: 0.9;
   }
   /* Settle sag — the tube catches, dips once, locks on */
   76% {
-    color: color-mix(in srgb, var(--color-signal) 60%, transparent);
-    -webkit-text-stroke-color: color-mix(in srgb, var(--color-signal) 60%, var(--color-concrete-900));
-    opacity: 0.6;
-    text-shadow:
-      0 0 0.03em color-mix(in srgb, var(--color-signal) 48%, transparent),
-      0 0 0.1em color-mix(in srgb, var(--color-signal) 34%, transparent),
-      0 0 0.22em color-mix(in srgb, var(--color-signal) 20%, transparent),
-      0 0 0.45em color-mix(in srgb, var(--color-signal) 11%, transparent);
+    opacity: 0.55;
   }
   90% {
-    opacity: 0.94;
-    text-shadow:
-      0 0 0.04em color-mix(in srgb, var(--color-signal) 90%, transparent),
-      0 0 0.14em color-mix(in srgb, var(--color-signal) 72%, transparent),
-      0 0 0.34em color-mix(in srgb, var(--color-signal) 46%, transparent),
-      0 0 0.7em color-mix(in srgb, var(--color-signal) 26%, transparent);
+    opacity: 0.95;
   }
   100% {
-    color: var(--color-signal);
-    -webkit-text-stroke-color: var(--color-signal);
     opacity: 1;
-    text-shadow:
-      0 0 0.04em var(--color-signal),
-      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
-      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
-      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
   }
 }
 
@@ -240,105 +208,49 @@
 @keyframes hl-neon-breathe {
   0%,
   100% {
-    text-shadow:
-      0 0 0.04em var(--color-signal),
-      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
-      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
-      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+    opacity: 1;
   }
   50% {
-    text-shadow:
-      0 0 0.04em color-mix(in srgb, var(--color-signal) 90%, transparent),
-      0 0 0.12em color-mix(in srgb, var(--color-signal) 62%, transparent),
-      0 0 0.28em color-mix(in srgb, var(--color-signal) 38%, transparent),
-      0 0 0.58em color-mix(in srgb, var(--color-signal) 20%, transparent);
+    opacity: 0.8;
   }
 }
 
-/* Reusable shadow states — 4 layers everywhere so every transition
-   between states interpolates smoothly instead of snapping */
+/* Power-down: the tube sputters twice as the current cuts, then goes
+   dark. Ending at opacity 0 hands back to the resting outline state,
+   so there is no pop when the animation finishes. */
 @keyframes hl-neon-off {
   0%,
   12% {
-    color: var(--color-signal);
-    -webkit-text-stroke-color: var(--color-signal);
     opacity: 1;
-    text-shadow:
-      0 0 0.04em var(--color-signal),
-      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
-      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
-      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
   }
   22% {
-    opacity: 0.45;
-    text-shadow:
-      0 0 0.03em color-mix(in srgb, var(--color-signal) 45%, transparent),
-      0 0 0.08em color-mix(in srgb, var(--color-signal) 30%, transparent),
-      0 0 0.18em color-mix(in srgb, var(--color-signal) 18%, transparent),
-      0 0 0.35em color-mix(in srgb, var(--color-signal) 10%, transparent);
+    opacity: 0.3;
   }
   32% {
-    color: var(--color-signal);
-    -webkit-text-stroke-color: var(--color-signal);
-    opacity: 0.95;
-    text-shadow:
-      0 0 0.04em var(--color-signal),
-      0 0 0.14em color-mix(in srgb, var(--color-signal) 80%, transparent),
-      0 0 0.34em color-mix(in srgb, var(--color-signal) 50%, transparent),
-      0 0 0.7em color-mix(in srgb, var(--color-signal) 28%, transparent);
+    opacity: 0.85;
   }
   44% {
-    opacity: 0.4;
-    text-shadow:
-      0 0 0.03em color-mix(in srgb, var(--color-signal) 42%, transparent),
-      0 0 0.08em color-mix(in srgb, var(--color-signal) 28%, transparent),
-      0 0 0.16em color-mix(in srgb, var(--color-signal) 16%, transparent),
-      0 0 0.32em color-mix(in srgb, var(--color-signal) 9%, transparent);
+    opacity: 0.28;
   }
   56% {
-    opacity: 0.85;
-    text-shadow:
-      0 0 0.04em color-mix(in srgb, var(--color-signal) 88%, transparent),
-      0 0 0.12em color-mix(in srgb, var(--color-signal) 60%, transparent),
-      0 0 0.28em color-mix(in srgb, var(--color-signal) 36%, transparent),
-      0 0 0.56em color-mix(in srgb, var(--color-signal) 19%, transparent);
+    opacity: 0.75;
   }
   68% {
-    opacity: 0.3;
-    text-shadow:
-      0 0 0.03em color-mix(in srgb, var(--color-signal) 38%, transparent),
-      0 0 0.07em color-mix(in srgb, var(--color-signal) 24%, transparent),
-      0 0 0.15em color-mix(in srgb, var(--color-signal) 14%, transparent),
-      0 0 0.3em color-mix(in srgb, var(--color-signal) 8%, transparent);
+    opacity: 0.22;
   }
   100% {
-    color: transparent;
-    -webkit-text-stroke-color: var(--color-concrete-900);
-    opacity: 1;
-    text-shadow:
-      0 0 0.04em transparent,
-      0 0 0.14em transparent,
-      0 0 0.34em transparent,
-      0 0 0.7em transparent;
+    opacity: 0;
   }
 }
 
-#hero h1:hover .hl-neon,
-#hero h1.neon-live .hl-neon {
-  /* Resting declarations double as the post-animation state — during the
-     animation the keyframes own color/stroke, ramping dark tube → full
-     strike, before handing over to the breathe loop */
-  color: var(--color-signal);
-  -webkit-text-stroke-color: var(--color-signal);
+#hero h1:hover .hl-neon-overlay,
+#hero h1.neon-live .hl-neon-overlay {
   animation:
     hl-neon-flicker 1.5s ease-in-out both,
     hl-neon-breathe 3.2s ease-in-out 1.5s infinite;
 }
 
-/* Power-down: the tube sputters twice as the current cuts, then goes
-   dark. Final keyframe mirrors the base outline state exactly, so there
-   is no pop when the animation hands back to the resting style. */
-#hero h1.neon-dying .hl-neon {
+#hero h1.neon-dying .hl-neon-overlay {
   animation: hl-neon-off 0.95s ease-in-out both;
 }
 
@@ -785,7 +697,9 @@ html.rl-visited .hl-line-neon {
 
 .grain-overlay {
   position: fixed;
-  inset: -100%;
+  /* -50% keeps ±3% translate edge-safe at 1/4 the texture of -100%
+     (4× viewport pixels instead of 9×) — same look, way less VRAM */
+  inset: -50%;
   z-index: 95;
   pointer-events: none;
   opacity: 0.045;

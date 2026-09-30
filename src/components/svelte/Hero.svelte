@@ -206,11 +206,20 @@
         <span class="hl-line block overflow-hidden pb-[0.06em]" class:hl-line-neon={line.outline}>
           <span class:text-stroke-black={line.outline} class:hl-neon={line.outline}>
             {#each line.text.split('') as ch, i (i)}
-              <span class="hl-char inline-block will-change-transform"
+              <span class="hl-char inline-block"
                 >{ch === ' ' ? '\u00A0' : ch}</span
               >
             {/each}
             {#if line.asterisk}<span class="hl-char inline-block text-signal">*</span>{/if}
+            {#if line.outline}
+              <!-- Pre-lit neon tube — CSS only fades this layer's opacity,
+                   the base text above is never repainted -->
+              <span class="hl-neon-overlay" aria-hidden="true">
+                {#each line.text.split('') as ch, i (i)}
+                  <span class="inline-block">{ch === ' ' ? '\u00A0' : ch}</span>
+                {/each}
+              </span>
+            {/if}
           </span>
         </span>
       {/each}

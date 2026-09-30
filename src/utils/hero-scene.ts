@@ -2,6 +2,16 @@
  * Hero WebGL scene. Lives in its own module so the dynamic importer in
  * HeroCanvas.svelte gets a tree-shaken `three` chunk (~300KB) instead of the
  * full 720KB namespace bundle — named imports let Rollup drop unused modules.
+ *
+ * Performance budget (looks the same, runs on weak GPUs):
+ * - Icosahedron detail 18/12 (was 36/16) — silhouette error stays sub-pixel
+ * - Vertex shader evaluates the cheap single-octave displacement for normal
+ *   reconstruction (5 simplex calls per vertex, was 8)
+ * - MeshStandardMaterial (no clearcoat) instead of MeshPhysicalMaterial
+ * - Dynamic resolution scaling: sustained slow frames step the pixel ratio
+ *   down; sustained fast frames step it back up (bounded by base DPR)
+ * - 30fps cap on mobile / low-end hardware signals
+ * - Render loop pauses when the tab is hidden as well as off-screen
  */
 import {
   ACESFilmicToneMapping,
@@ -11,7 +21,6 @@ import {
   Group,
   IcosahedronGeometry,
   Mesh,
-  MeshPhysicalMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
   PointLight,
@@ -85,14 +94,26 @@ const GLSL_BLOB = /* glsl */ `
     return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
   }
 
+  // Primary octave only — the cheap sample used for normal reconstruction.
+  float dispBase(vec3 p) {
+    return snoise(p * uFreq + uTime * 0.35);
+  }
+
   float dispAmount(vec3 p) {
-    float n = snoise(p * uFreq + uTime * 0.35);
+    float n = dispBase(p);
     n += 0.45 * snoise(p * uFreq * 2.4 - uTime * 0.55);
     return n * uAmp * (1.0 + uGlitch * 0.8);
   }
 
   vec3 displace(vec3 p) {
     return p + normalize(p) * dispAmount(p);
+  }
+
+  // Single-octave variant for the normal's neighbour taps: the detail
+  // octave is half amplitude, so shading is visually identical at ~half
+  // the vertex shader cost.
+  vec3 displaceFast(vec3 p) {
+    return p + normalize(p) * dispBase(p) * uAmp * (1.0 + uGlitch * 0.8);
   }
 
   vec3 orthogonalVec(vec3 v) {
@@ -103,9 +124,9 @@ const GLSL_BLOB = /* glsl */ `
     float eps = 0.035;
     vec3 tangent = orthogonalVec(n);
     vec3 bitangent = normalize(cross(n, tangent));
-    vec3 p0 = displace(p);
-    vec3 p1 = displace(p + tangent * eps);
-    vec3 p2 = displace(p + bitangent * eps);
+    vec3 p0 = displaceFast(p);
+    vec3 p1 = displaceFast(p + tangent * eps);
+    vec3 p2 = displaceFast(p + bitangent * eps);
     return normalize(cross(p1 - p0, p2 - p0));
   }
 `;
@@ -121,6 +142,13 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
   const reduced = prefersReducedMotion();
   const isMobile = window.matchMedia('(max-width: 767px)').matches;
 
+  // Low-end signals → cap the loop at 30fps. Motion is slow and organic,
+  // so a 30fps cap reads perfectly smooth while halving GPU/CPU work.
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  const lowEnd =
+    isMobile || (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+  const FRAME_BUDGET = lowEnd ? 1 / 30 : 0;
+
   const scene = new Scene();
   const camera = new PerspectiveCamera(42, 1, 0.1, 100);
   camera.position.set(0, 0, 4.6);
@@ -131,7 +159,8 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
     alpha: true,
     powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
+  const baseDpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 1.75);
+  renderer.setPixelRatio(baseDpr);
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
 
@@ -159,16 +188,16 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
     uGlitch: { value: 0 },
   };
 
-  const geometry = new IcosahedronGeometry(1.45, isMobile ? 16 : 36);
-  // Light concrete-ceramic body: high contrast against black display text,
-  // clearcoat gives it the premium glaze without going dark
-  const material = new MeshPhysicalMaterial({
+  const geometry = new IcosahedronGeometry(1.45, isMobile ? 12 : 18);
+  // Light concrete-ceramic body: high contrast against black display text.
+  // Standard material keeps the PBR reflections; the clearcoat glaze of the
+  // old physical material wasn't worth its per-fragment cost. Low roughness
+  // + high envMapIntensity reproduces the wet-ceramic glaze instead.
+  const material = new MeshStandardMaterial({
     color: new Color('#d5cfc2'),
-    metalness: 0.07,
-    roughness: 0.52,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.32,
-    envMapIntensity: 0.85,
+    metalness: 0.18,
+    roughness: 0.26,
+    envMapIntensity: 1.55,
     emissive: new Color('#ff2e1f'),
     emissiveIntensity: 0,
   });
@@ -277,15 +306,59 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
     });
   };
 
-  // -- Render loop (paused when the hero is off-screen) -----------
+  // -- Dynamic resolution scaling ---------------------------------
+  // Weak GPUs get stepped down until they hold ~40fps; strong ones climb
+  // back to full resolution. Steps are small and rate-limited so it reads
+  // as a soft focus change, never a pop.
+  let quality = 1;
+  const QUALITY_MIN = 0.6;
+  const QUALITY_STEP = 0.15;
+  let emaFrame = 1 / 60;
+  let evalFrames = 0;
+  let goodEvals = 0;
+
+  const applyQuality = () => {
+    renderer.setPixelRatio(baseDpr * quality);
+    renderer.setSize(wrapEl.clientWidth, wrapEl.clientHeight, false);
+  };
+
+  const evaluatePerf = (rawDt: number) => {
+    emaFrame = emaFrame * 0.9 + rawDt * 0.1;
+    if (++evalFrames < 40) return;
+    evalFrames = 0;
+    if (emaFrame > 0.026 && quality > QUALITY_MIN) {
+      quality = Math.max(QUALITY_MIN, quality - QUALITY_STEP);
+      goodEvals = 0;
+      applyQuality();
+    } else if (emaFrame < 0.015 && quality < 1) {
+      // Only climb back after three consecutive healthy windows — prevents
+      // oscillation right at the GPU's limit.
+      if (++goodEvals >= 3) {
+        quality = Math.min(1, quality + QUALITY_STEP);
+        goodEvals = 0;
+        applyQuality();
+      }
+    } else {
+      goodEvals = 0;
+    }
+  };
+
+  // -- Render loop (paused off-screen AND when the tab is hidden) -----------
   const clock = new Clock();
   let raf = 0;
   let running = false;
+  let inView = true;
   let elapsed = reduced ? 10 : 0;
 
   const tick = () => {
     raf = requestAnimationFrame(tick);
-    const dt = Math.min(clock.getDelta(), 0.05);
+    const rawDt = clock.getDelta();
+    evaluatePerf(rawDt);
+
+    // Optional fps cap — skip whole frames on low-end devices.
+    if (FRAME_BUDGET && rawDt < FRAME_BUDGET) return;
+
+    const dt = Math.min(rawDt, 0.05);
     elapsed += dt;
 
     nextGlitch -= dt;
@@ -335,7 +408,7 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
   };
 
   const start = () => {
-    if (running || reduced) return;
+    if (running || reduced || !inView || document.hidden) return;
     running = true;
     clock.getDelta();
     raf = requestAnimationFrame(tick);
@@ -347,12 +420,19 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
 
   const io = new IntersectionObserver(
     ([entry]) => {
-      if (entry.isIntersecting) start();
+      inView = entry.isIntersecting;
+      if (inView) start();
       else stop();
     },
     { threshold: 0 }
   );
   io.observe(wrapEl);
+
+  const onVisibility = () => {
+    if (document.hidden) stop();
+    else start();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
 
   // -- Resize -------------------------------------------------------
   const setSize = () => {
@@ -373,6 +453,7 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
     stop();
     io.disconnect();
     ro.disconnect();
+    document.removeEventListener('visibilitychange', onVisibility);
     window.removeEventListener('mousemove', onMouseMove);
     gsap.killTweensOf(uniforms.uGlitch);
     geometry.dispose();
