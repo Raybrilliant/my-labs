@@ -4,12 +4,13 @@ import { readContent } from '../../utils/store';
 
 export const prerender = false;
 
-const { projects, services, team } = await readContent();
+const { projects, services, team, clients } = await readContent();
 
 const cards = [
     { href: '/admin/projects', label: 'PROJECTS', count: projects.length, note: 'CASE FILES SHOWN ON THE HOMEPAGE & /PROJECTS/[SLUG]' },
     { href: '/admin/services', label: 'SERVICES', count: services.length, note: 'THE 02 / SERVICES LIST' },
-    { href: '/admin/team', label: 'TEAM', count: team.length, note: 'THE 05 / THE LAB SECTION' },
+    { href: '/admin/team', label: 'TEAM', count: team.length, note: 'THE 06 / THE LAB SECTION' },
+    { href: '/admin/clients', label: 'CLIENTS', count: clients.length, note: 'THE 04 / CLIENTS WALL' },
 ];
 ---
 
@@ -17,7 +18,7 @@ const cards = [
     <p class="text-[10px] tracking-[0.3em] text-concrete-600 uppercase">[ ADMIN / CONTROL ROOM ]</p>
     <h1 class="mt-3 font-display text-5xl uppercase md:text-6xl">MANAGE THE LAB</h1>
 
-    <div class="mt-10 grid gap-6 md:grid-cols-3">
+    <div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {
             cards.map((card) => (
                 <a

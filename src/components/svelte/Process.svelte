@@ -86,7 +86,7 @@
   <div bind:this={sectionEl} class="shell grid gap-12 md:grid-cols-[minmax(0,340px)_1fr] md:gap-20">
     <div class="md:sticky md:top-28 md:self-start">
       <p class="font-mono text-xs tracking-[0.3em] text-concrete-600 uppercase" data-reveal>
-        [ 04 / PROCESS ]
+        [ 05 / PROCESS ]
       </p>
       <h2
         class="mt-5 font-display text-concrete-900 uppercase leading-[0.92] text-[clamp(2.6rem,7.5vw,6.5rem)]"

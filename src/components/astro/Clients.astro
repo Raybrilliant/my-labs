@@ -1,0 +1,97 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import Marquee from './Marquee.astro';
+import type { Client } from '../utils/db';
+
+interface Props {
+  clients: Client[];
+}
+
+const { clients } = Astro.props;
+---
+
+<section id="clients" class="border-b-2 border-concrete-900 bg-concrete-50">
+    <Marquee
+        items={['THE RECEIPTS', 'TRUSTED BY', 'SHIPPED & STILL UP', 'ZERO POWERPOINTS']}
+        duration="22s"
+        class="border-t-0"
+    />
+
+    <div class="shell section-pad">
+        <SectionHeading
+            index="04"
+            label="CLIENTS"
+            lines={['THE', 'RECEIPTS']}
+            note="A SMALL SAMPLE OF WHO WE SHIP FOR. THE REST SIGN OUR NDAS."
+        />
+
+        <!-- 2px "borders" via grid gaps over a concrete-900 bed — no double borders, no utilities fought -->
+        <div
+            class="grid grid-cols-2 gap-[2px] border-2 border-concrete-900 bg-concrete-900 p-[2px] md:grid-cols-4"
+        >
+            {
+                clients.map((client, i) => (
+                    <div
+                        class:list={[
+                            'group flex min-h-36 flex-col justify-between gap-4 p-5 transition-colors duration-150 md:p-6',
+                            i % 2 === 1 ? 'bg-concrete-100' : 'bg-concrete-50',
+                            'hover:bg-concrete-900',
+                        ]}
+                        data-reveal
+                    >
+                        <span class="font-mono text-[10px] tracking-[0.25em] text-concrete-600 uppercase transition-colors duration-150 group-hover:text-concrete-300">
+                            {`0${i + 1}`}
+                        </span>
+                        <div>
+                            {client.img && (
+                                <img
+                                    src={client.img}
+                                    alt={client.alt || `${client.name} logo`}
+                                    loading="lazy"
+                                    class="mb-3 h-12 w-auto max-w-full object-contain grayscale transition-all duration-150 group-hover:grayscale-0 md:h-14"
+                                />
+                            )}
+                            <h3
+                                class:list={[
+                                    'uppercase leading-[0.95] text-concrete-900 transition-all duration-150 group-hover:-rotate-1 group-hover:text-signal',
+                                    client.img
+                                        ? 'font-mono text-xs font-bold tracking-widest'
+                                        : 'font-display text-lg md:text-2xl',
+                                ]}
+                            >
+                                {client.name}
+                            </h3>
+                            {client.sector && (
+                                <p class="mt-2 font-mono text-[10px] tracking-[0.2em] text-concrete-600 uppercase transition-colors duration-150 group-hover:text-concrete-300">
+                                    {client.sector}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                ))
+            }
+
+            <a
+                href="#contact"
+                class="group flex min-h-36 flex-col justify-between bg-signal p-5 transition-colors duration-150 hover:bg-concrete-900 md:p-6"
+                data-reveal
+            >
+                <span class="font-mono text-[10px] tracking-[0.25em] text-concrete-50/80 uppercase"
+                    >NEXT</span
+                >
+                <div>
+                    <h3
+                        class="font-display text-lg uppercase leading-[0.95] text-concrete-50 transition-colors duration-150 group-hover:text-signal md:text-2xl"
+                    >
+                        YOUR LOGO<br />HERE?
+                    </h3>
+                    <p
+                        class="mt-2 font-mono text-[10px] tracking-[0.2em] text-concrete-50/80 uppercase transition-colors duration-150 group-hover:text-concrete-300"
+                    >
+                        [ CLAIM THE SLOT → ]
+                    </p>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>

@@ -6,7 +6,7 @@ import '@fontsource/jetbrains-mono/700.css';
 
 interface Props {
   title: string;
-  active: 'dashboard' | 'projects' | 'services' | 'team';
+  active: 'dashboard' | 'projects' | 'services' | 'team' | 'clients';
 }
 
 const { title, active } = Astro.props;
@@ -16,6 +16,7 @@ const nav = [
     { href: '/admin/projects', label: 'PROJECTS', key: 'projects' },
     { href: '/admin/services', label: 'SERVICES', key: 'services' },
     { href: '/admin/team', label: 'TEAM', key: 'team' },
+    { href: '/admin/clients', label: 'CLIENTS', key: 'clients' },
 ] as const;
 ---
 

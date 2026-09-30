@@ -1,0 +1,12 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminClients from '../../components/svelte/admin/AdminClients.svelte';
+
+export const prerender = false;
+---
+
+<AdminLayout title="Clients" active="clients">
+    <p class="text-[10px] tracking-[0.3em] text-concrete-600 uppercase">[ ADMIN / CLIENTS ]</p>
+    <h1 class="mt-3 mb-10 font-display text-5xl uppercase md:text-6xl">MANAGE CLIENTS</h1>
+    <AdminClients client:only="svelte" />
+</AdminLayout>

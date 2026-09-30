@@ -24,8 +24,9 @@ import {
 } from '../data/projects';
 import { services as seedServices, type Service } from '../data/services';
 import { team as seedTeam, type TeamMember } from '../data/team';
+import { clients as seedClients, type Client } from '../data/clients';
 
-export type { OutcomeStat, Project, Service, Swatch, TeamMember, TypefaceEntry };
+export type { OutcomeStat, Project, Service, TeamMember, TypefaceEntry, Client };
 
 export const projectsTable = sqliteTable('projects', {
   slug: text('slug').primaryKey(),
@@ -65,9 +66,19 @@ export const teamTable = sqliteTable('team_members', {
   position: integer('position').notNull().default(0),
 });
 
+export const clientsTable = sqliteTable('clients', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().default(''),
+  sector: text('sector').notNull().default(''),
+  img: text('img').notNull().default(''),
+  alt: text('alt').notNull().default(''),
+  position: integer('position').notNull().default(0),
+});
+
 type ProjectRow = typeof projectsTable.$inferSelect;
 type ServiceRow = typeof servicesTable.$inferSelect;
 type TeamRow = typeof teamTable.$inferSelect;
+type ClientRow = typeof clientsTable.$inferSelect;
 
 type Db = ReturnType<typeof drizzle>;
 let _db: Db | null = null;
@@ -127,6 +138,14 @@ export function getDb(): Db {
       alt TEXT NOT NULL DEFAULT '',
       position INTEGER NOT NULL DEFAULT 0
     );
+    CREATE TABLE IF NOT EXISTS clients (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL DEFAULT '',
+      sector TEXT NOT NULL DEFAULT '',
+      img TEXT NOT NULL DEFAULT '',
+      alt TEXT NOT NULL DEFAULT '',
+      position INTEGER NOT NULL DEFAULT 0
+    );
   `);
 
   // drizzle 1.0 RC: positional `drizzle(client)` is broken (it treats the
@@ -134,9 +153,33 @@ export function getDb(): Db {
   // The { client } config form is the supported path.
   const db = drizzle({ client });
   seedIfNeeded(client, db);
+  // Own flag — databases seeded before the clients table existed still
+  // get the default roster exactly once.
+  seedClientsIfNeeded(client, db);
 
   _db = db;
   return db;
+}
+
+function seedClientsIfNeeded(client: Database.Database, db: Db): void {
+  const flag = client.prepare('SELECT value FROM meta WHERE key = ?').get('clients_seeded') as
+    | { value: string }
+    | null;
+  if (flag) return;
+
+  client.exec('BEGIN');
+  try {
+    for (const [i, c] of structuredClone(seedClients).entries()) {
+      db.insert(clientsTable).values(clientToRow(c, i)).onConflictDoNothing().run();
+    }
+    client
+      .prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)')
+      .run('clients_seeded', new Date().toISOString());
+    client.exec('COMMIT');
+  } catch (err) {
+    client.exec('ROLLBACK');
+    throw err;
+  }
 }
 
 function seedIfNeeded(client: Database.Database, db: Db): void {
@@ -279,6 +322,20 @@ export function teamToRow(m: TeamMember, position: number): typeof teamTable.$in
   return { id: m.id, name: m.name, role: m.role, bio: m.bio, img: m.img, alt: m.alt, position };
 }
 
+export function rowToClient(row: ClientRow): Client {
+  return {
+    id: row.id,
+    name: row.name,
+    sector: row.sector,
+    img: row.img,
+    alt: row.alt,
+  };
+}
+
+export function clientToRow(c: Client, position: number): typeof clientsTable.$inferInsert {
+  return { id: c.id, name: c.name, sector: c.sector, img: c.img, alt: c.alt, position };
+}
+
 // ---------- shared read helpers (used by the store) ----------
 
 export function allProjects(): Project[] {
@@ -294,4 +351,9 @@ export function allServices(): Service[] {
 export function allTeam(): TeamMember[] {
   const db = getDb();
   return db.select().from(teamTable).orderBy(asc(teamTable.position)).all().map(rowToTeamMember);
+}
+
+export function allClients(): Client[] {
+  const db = getDb();
+  return db.select().from(clientsTable).orderBy(asc(clientsTable.position)).all().map(rowToClient);
 }

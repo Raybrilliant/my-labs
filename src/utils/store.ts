@@ -6,15 +6,16 @@
  * Admin edits via /api/admin/* rewrite the rows; SSR pages read them
  * per request. Public API is unchanged from the previous JSON-file store.
  */
-import { getDb, projectsTable, servicesTable, teamTable, allProjects, allServices, allTeam, projectToRow, serviceToRow, teamToRow, type Project, type Service, type TeamMember } from './db';
+import { getDb, projectsTable, servicesTable, teamTable, clientsTable, allProjects, allServices, allTeam, allClients, projectToRow, serviceToRow, teamToRow, clientToRow, type Project, type Service, type TeamMember, type Client } from './db';
 
-export type { Project, Service, TeamMember } from './db';
+export type { Project, Service, TeamMember, Client } from './db';
 export type { Swatch, TypefaceEntry, OutcomeStat } from '../data/projects';
 
 export interface SiteContent {
   projects: Project[];
   services: Service[];
   team: TeamMember[];
+  clients: Client[];
 }
 
 export async function readContent(): Promise<SiteContent> {
@@ -22,6 +23,7 @@ export async function readContent(): Promise<SiteContent> {
     projects: allProjects(),
     services: allServices(),
     team: allTeam(),
+    clients: allClients(),
   };
 }
 
@@ -35,9 +37,11 @@ export async function writeContent(content: SiteContent): Promise<void> {
     tx.delete(projectsTable).run();
     tx.delete(servicesTable).run();
     tx.delete(teamTable).run();
+    tx.delete(clientsTable).run();
     content.projects.forEach((p, i) => tx.insert(projectsTable).values(projectToRow(p, i)).run());
     content.services.forEach((s, i) => tx.insert(servicesTable).values(serviceToRow(s, i)).run());
     content.team.forEach((m, i) => tx.insert(teamTable).values(teamToRow(m, i)).run());
+    content.clients.forEach((c, i) => tx.insert(clientsTable).values(clientToRow(c, i)).run());
   });
 }
 

@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Nav from "../components/astro/Nav.astro";
 import Marquee from "../components/astro/Marquee.astro";
 import Projects from "../components/astro/Projects.astro";
+import Clients from "../components/astro/Clients.astro";
 import Team from "../components/astro/Team.astro";
 import Contact from "../components/astro/Contact.astro";
 import Footer from "../components/astro/Footer.astro";
@@ -14,7 +15,7 @@ import { readContent } from "../utils/store";
 // Server-rendered so admin edits (projects/services/team) show live.
 export const prerender = false;
 
-const { services } = await readContent();
+const { services, clients } = await readContent();
 ---
 
 <BaseLayout
@@ -40,6 +41,8 @@ const { services } = await readContent();
         <Services client:visible services={services} />
 
         <Projects />
+
+        <Clients clients={clients} />
 
         <Marquee
             items={["DISCOVER", "DESIGN", "DEVELOP", "DEPLOY", "SUPPORT"]}
