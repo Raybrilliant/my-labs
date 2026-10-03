@@ -3,9 +3,18 @@ import SectionHeading from './SectionHeading.astro';
 import { readContent } from '../../utils/store';
 
 const { projects } = await readContent();
+const n = projects.length;
+const pad = (v: number) => String(v).padStart(2, '0');
+
+/** Flip to "top-down" to render project 01 at the back of the pile instead. */
+const STACK_ORDER: 'bottom-up' | 'top-down' = 'bottom-up';
+
+const pilePos = (i: number) => (STACK_ORDER === 'bottom-up' ? i : n - 1 - i);
+/** Tab x-stagger across the folder top edges — never two tabs on the same spot. */
+const tabX = (i: number) => 4 + (i % 4) * 24;
 ---
 
-<section id="projects" class="section-pad border-b-2 border-concrete-900 bg-concrete-50">
+<section id="projects" class="border-b-2 border-concrete-900 bg-concrete-50 pt-24 md:pt-36">
   <div class="shell">
     <div class="flex flex-wrap items-end justify-between gap-6">
       <SectionHeading
@@ -14,68 +23,985 @@ const { projects } = await readContent();
         lines={['SELECTED', 'WORK_']}
       />
       <p
-        class="mb-14 hidden font-mono text-xs tracking-widest text-concrete-600 md:mb-20 lg:block"
+        class="mt-5 hidden font-mono text-xs tracking-widest text-concrete-600 lg:block"
         data-reveal
       >
         [ EVERY BUILD: BLEEDING-EDGE, FAST, EFFICIENT ]
       </p>
     </div>
+    <p class="mt-5 font-mono text-xs tracking-widest text-concrete-600 uppercase md:text-sm" data-reveal>
+      [ PICK A FOLDER. HOVER TO LIFT — CLICK TO OPEN THE CASE FILE. ]
+    </p>
+  </div>
 
-    <div class="grid grid-cols-1 gap-x-10 gap-y-16 md:grid-cols-12">
-      {
-        projects.map((project, i) => {
-          const autoSpan =
-            i % 4 === 1
-              ? 'md:col-span-5 md:mt-28'
-              : i % 4 === 2
-                ? 'md:col-span-5'
-                : i % 4 === 3
-                  ? 'md:col-span-7 md:mt-16'
-                  : 'md:col-span-7';
-          return (
-            <a
-              href={`/projects/${project.slug}`}
-              class:list={['project-card group', project.span ?? autoSpan]}
-              data-cursor-label="VIEW →"
-              data-reveal
-            >
-            <article>
-              <div class="shadow-hard border-2 border-concrete-900 bg-concrete-100 transition-all duration-200 group-hover:shadow-hard-red">
-                <div class="overflow-hidden">
-                  <img
-                    src={project.img}
-                    alt={project.alt}
-                    width="1200"
-                    height="900"
-                    loading="lazy"
-                    decoding="async"
-                    class="aspect-[4/3] w-full object-contain transition-transform duration-300 will-change-transform group-hover:scale-[1.04] group-hover:-rotate-[0.5deg]"
-                  />
-                </div>
-                <span class="absolute top-0 left-0 border-r-2 border-b-2 border-concrete-900 bg-signal px-2 py-1 font-mono text-[10px] tracking-widest text-concrete-50">
-                  {project.year}
+  <!-- THE PILE — edge-to-edge, no shell. Slots are stationary hit areas;
+       only .folder-inner (and the paper) ever move. -->
+  <div
+    class="file-stack"
+    style={`--n:${n};`}
+    data-file-stack
+  >
+    {
+      projects.map((project, i) => {
+        const excerpt = project.briefIntro || project.desc;
+        return (
+          <a
+            href={`/projects/${project.slug}`}
+            class="file-slot"
+            style={`--p:${pilePos(i)}; --tabx:${tabX(i)}%;`}
+            data-slug={project.slug}
+            data-img={project.img}
+            aria-label={`Open case file ${pad(i + 1)}: ${project.name}`}
+            data-cursor-label="OPEN ↗"
+          >
+            <span class="file-paper" aria-hidden="true">
+              FILE NO. {pad(i + 1)} · {project.year}
+            </span>
+
+            <span class="folder-inner">
+              <span class="file-tab" aria-hidden="true">
+                [{pad(i + 1)}]
+              </span>
+
+              <span class="file-strip">
+                <span class="file-strip-index" aria-hidden="true">
+                  {pad(i + 1)}
                 </span>
-              </div>
+                <h3 class="file-name">{project.name}</h3>
+                <span class="file-cat">[{project.type} — CASE FILE]</span>
+                <span class="file-year">{project.year}</span>
+                <span class="file-open" aria-hidden="true">
+                  [ OPEN ↗ ]
+                </span>
+              </span>
 
-              <div class="mt-5 flex items-start justify-between gap-4 border-t-2 border-concrete-900 pt-3">
-                <h3 class="font-display text-2xl text-concrete-900 uppercase transition-colors duration-150 group-hover:text-signal md:text-3xl">
+              <span class="file-body">
+                <p class="file-excerpt">{excerpt}</p>
+                <p class="file-meta">
+                  CLIENT: {project.client || '—'} · TYPE: {project.type || '—'}
+                </p>
+              </span>
+            </span>
+          </a>
+        );
+      })
+    }
+  </div>
+  <div class="file-desk" aria-hidden="true"></div>
+
+  <!-- One case-file dialog per project — static SSR, JS only animates. -->
+  {
+    projects.map((project, i) => (
+      <dialog class="case-dialog" aria-labelledby={`case-title-${project.slug}`} data-case-dialog>
+        <div class="case-stage">
+          <div class="case-assembly">
+            <article class="case-page">
+              <div class="case-page-inner" data-case-details>
+                <p class="case-kicker">
+                  [ CASE FILE {pad(i + 1)} / {pad(n)} ]
+                </p>
+                <h3 class="case-title" id={`case-title-${project.slug}`}>
                   {project.name}
                 </h3>
-                <span class="font-mono text-lg text-concrete-900 transition-all duration-150 group-hover:translate-x-1 group-hover:text-signal" aria-hidden="true">
-                  ↗
-                </span>
+                <p class="case-cat">
+                  [{project.type} · {project.year}]
+                </p>
+                <img
+                  class="case-img-mobile"
+                  src={project.img}
+                  alt={project.alt}
+                  width="1200"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <p class="case-desc">{project.desc || project.briefIntro}</p>
+
+                <dl class="case-meta">
+                  {project.client && (
+                    <div class="case-meta-row">
+                      <dt>CLIENT</dt>
+                      <dd>{project.client}</dd>
+                    </div>
+                  )}
+                  {project.type && (
+                    <div class="case-meta-row">
+                      <dt>TYPE</dt>
+                      <dd>{project.type}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                <div class="case-actions">
+                  <a class="case-cta" href={`/projects/${project.slug}`} data-cursor-label="VIEW →">
+                    [ VIEW DETAIL → ]
+                  </a>
+                  <button class="case-close" type="button" data-case-close autofocus>
+                    [ CLOSE × ]
+                  </button>
+                </div>
               </div>
-              <p class="mt-2 font-mono text-xs tracking-widest text-concrete-600">
-                [{project.type} — CASE FILE]
-              </p>
-              <p class="mt-3 max-w-xl text-sm leading-relaxed text-concrete-600">
-                {project.desc}
-              </p>
             </article>
-          </a>
-          );
-        })
-      }
-    </div>
-  </div>
+
+            <div class="case-cover">
+              <div class="case-face case-face-front" aria-hidden="true">
+                <span class="case-front-tab">[{pad(i + 1)}]</span>
+                <span class="case-front-name">{project.name}</span>
+                <span class="case-front-meta">
+                  {project.type} · {project.year}
+                </span>
+                <span class="case-front-label">[ CASE FILE ]</span>
+              </div>
+              <figure class="case-face case-face-inner">
+                <img
+                  src={project.img}
+                  alt={project.alt}
+                  width="1200"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>FIG. {pad(i + 1)} — {project.name}</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </dialog>
+    ))
+  }
 </section>
+
+<style>
+  /* ============================================================
+     THE PILE
+     ============================================================ */
+  .file-stack {
+    --H: clamp(360px, 52vh, 560px);
+    --S: clamp(72px, 9vw, 120px);
+    --delta: clamp(40px, 5vw, 80px);
+    position: relative;
+    /* fixed height — hover/open never change layout */
+    height: calc(var(--H) + (var(--n) - 1) * var(--S));
+    /* headroom for the lift + paper so nothing clips */
+    margin-top: calc(var(--delta) + 72px);
+  }
+
+  .file-desk {
+    height: 6px;
+    background: var(--color-concrete-900);
+  }
+
+  /* Stationary hit area — its box never moves */
+  .file-slot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--H);
+    /* bottom-up pile: project 01 (p=0) sits last = bottom, front-most */
+    top: calc((var(--n) - 1 - var(--p)) * var(--S));
+    z-index: calc(var(--n) - var(--p));
+    display: block;
+    transition: opacity 0.3s ease;
+  }
+
+  .folder-inner {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: block;
+    background: var(--color-concrete-100);
+    border-top: 2px solid var(--color-concrete-900);
+    box-shadow: 0 -10px 24px -18px rgb(13 12 10 / 0.5);
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Cast shadow onto the folder behind — above the top edge */
+  .folder-inner::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -44px;
+    height: 44px;
+    background: linear-gradient(to top, rgb(13 12 10 / 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.42s ease;
+    pointer-events: none;
+  }
+
+  /* Index tab on the top edge, staggered like a real cabinet */
+  .file-tab {
+    position: absolute;
+    top: 0;
+    left: var(--tabx);
+    transform: translateY(-100%);
+    display: inline-block;
+    border: 2px solid var(--color-concrete-900);
+    border-bottom: 0;
+    background: var(--color-concrete-900);
+    color: var(--color-concrete-50);
+    padding: 0.3rem 0.7rem;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+  }
+
+  /* Paper sheet peeking above the top edge (behind the folder body) */
+  .file-paper {
+    position: absolute;
+    z-index: 1;
+    top: -13px;
+    left: 20%;
+    right: 40%;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid var(--color-concrete-900);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--color-concrete-600);
+    white-space: nowrap;
+    overflow: hidden;
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Header strip — always visible */
+  .file-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--S);
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 2vw, 2rem);
+    padding: 0 clamp(1.25rem, 5vw, 5rem);
+  }
+  .file-strip-index {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: clamp(0.65rem, 1vw, 0.8rem);
+    font-weight: 700;
+    color: var(--color-signal);
+  }
+  .file-name {
+    margin: 0;
+    font-family: var(--font-display, 'Anton', sans-serif);
+    font-size: clamp(1.4rem, 3.4vw, 2.6rem);
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--color-concrete-900);
+    transition: color 0.15s ease-out;
+  }
+  .file-cat {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: clamp(0.55rem, 0.9vw, 0.75rem);
+    letter-spacing: 0.2em;
+    color: var(--color-concrete-600);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-year {
+    margin-left: auto;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: clamp(0.8rem, 1.2vw, 1.1rem);
+    color: var(--color-concrete-900);
+  }
+  .file-open {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: clamp(0.6rem, 1vw, 0.8rem);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--color-concrete-900);
+    border: 2px solid var(--color-concrete-900);
+    padding: 0.35rem 0.6rem;
+    background: var(--color-concrete-50);
+    transition:
+      background-color 0.15s ease-out,
+      color 0.15s ease-out;
+    white-space: nowrap;
+  }
+
+  /* Folder face body — excerpt; covered by the folder in front at rest,
+     revealed by the lift on hover (front-most shows it always) */
+  .file-body {
+    position: absolute;
+    top: var(--S);
+    left: 0;
+    right: 0;
+    display: block;
+    padding: clamp(1.25rem, 3vh, 2.25rem) clamp(1.25rem, 5vw, 5rem) 2rem;
+    transition: opacity 0.3s ease-out;
+  }
+  .file-excerpt {
+    margin: 0;
+    max-width: 60ch;
+    font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+    line-height: 1.6;
+    color: var(--color-concrete-900);
+  }
+  .file-meta {
+    margin: 0.9rem 0 0;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-concrete-600);
+  }
+
+  /* Vacated slot while the file is checked out */
+  .file-slot.checked-out {
+    pointer-events: none;
+  }
+  .file-slot.checked-out .folder-inner {
+    opacity: 0;
+  }
+  .file-slot.checked-out::after {
+    content: '[ FILE CHECKED OUT ]';
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border: 2px dashed var(--color-concrete-300);
+    background: color-mix(in srgb, var(--color-concrete-50) 55%, transparent);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--color-concrete-600);
+  }
+
+  /* ============================================================
+     HOVER — mouse + fine pointers only; transforms/opacity only
+     ============================================================ */
+  @media (hover: hover) and (pointer: fine) {
+    @media (prefers-reduced-motion: no-preference) {
+      /* the popped folder */
+      .file-slot:hover .folder-inner,
+      .file-slot:focus-visible .folder-inner {
+        transform: translateY(calc(var(--delta) * -1));
+      }
+      /* paper slides further out, slight tilt — paper only */
+      .file-slot:hover .file-paper,
+      .file-slot:focus-visible .file-paper {
+        transform: translateY(-20px) rotate(-1deg);
+      }
+      /* folders behind (later siblings) shift up so labels stay readable */
+      .file-slot:hover ~ .file-slot .folder-inner,
+      .file-slot:focus-visible ~ .file-slot .folder-inner {
+        transform: translateY(calc(var(--delta) * -0.6));
+      }
+      /* deepened shadow along the lifted top edge */
+      .file-slot:hover .folder-inner::after,
+      .file-slot:focus-visible .folder-inner::after {
+        opacity: 1;
+      }
+    }
+
+    /* dim everything except the active folder (works under reduced motion) */
+    .file-stack:has(.file-slot:hover) .file-slot:not(:hover),
+    .file-stack:has(.file-slot:focus-visible) .file-slot:not(:focus-visible) {
+      opacity: 0.7;
+    }
+
+    /* focus mode: other folders collapse to their strip — their excerpts
+       peeking out dimmed read as ghost text and kill readability */
+    .file-stack:has(.file-slot:hover) .file-slot:not(:hover) .file-body,
+    .file-stack:has(.file-slot:focus-visible) .file-slot:not(:focus-visible) .file-body {
+      opacity: 0;
+    }
+
+    .file-slot:hover .file-name,
+    .file-slot:focus-visible .file-name {
+      color: var(--color-signal);
+    }
+    .file-slot:hover .file-open,
+    .file-slot:focus-visible .file-open {
+      background: var(--color-signal);
+      border-color: var(--color-signal-deep);
+      color: var(--color-concrete-50);
+    }
+  }
+
+  .file-slot:focus-visible {
+    outline: 3px solid var(--color-signal);
+    outline-offset: -3px;
+  }
+
+  /* ============================================================
+     MOBILE PILE
+     ============================================================ */
+  @media (max-width: 767px) {
+    .file-stack {
+      --H: 320px;
+      --S: 68px;
+      --delta: 44px;
+      margin-top: 88px;
+    }
+    .file-strip {
+      gap: 0.6rem;
+      padding: 0 1rem;
+    }
+    .file-cat,
+    .file-paper {
+      display: none;
+    }
+    .file-tab {
+      font-size: 9px;
+      padding: 0.2rem 0.45rem;
+    }
+    .file-body {
+      padding: 1rem 1rem 1.25rem;
+    }
+  }
+
+  /* ============================================================
+     THE CASE FILE DIALOG
+     ============================================================ */
+  .case-dialog {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    /* Tailwind preflight resets margin:0 on all elements, killing the UA
+       margin:auto that centers modal dialogs — restore it or the case file
+       pins to the viewport's top-left. */
+    margin: auto;
+  }
+  .case-dialog::backdrop {
+    background: rgb(13 12 10 / 0.74);
+    animation: case-backdrop-in 0.25s ease both;
+  }
+  @keyframes case-backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  /* set while the folder flies home, so the backdrop melts away with it */
+  .case-dialog.is-closing::backdrop {
+    animation: case-backdrop-out 0.4s ease both;
+  }
+  @keyframes case-backdrop-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .case-stage {
+    perspective: 1800px;
+    width: min(1100px, 92vw);
+    margin: 0 auto;
+  }
+  .case-assembly {
+    position: relative;
+    width: min(550px, 100%);
+    height: min(660px, 78dvh);
+    margin: 0 auto;
+    /* without this the stage's perspective never reaches the cover —
+       the flip renders as a flat squash instead of a 3D swing */
+    transform-style: preserve-3d;
+  }
+
+  /* RIGHT page */
+  .case-page {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    border: 2px solid var(--color-concrete-900);
+    overflow: hidden;
+  }
+  .case-page-inner {
+    height: 100%;
+    overflow-y: auto;
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .case-kicker {
+    margin: 0;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--color-signal);
+  }
+  .case-title {
+    margin: 0;
+    font-family: var(--font-display, 'Anton', sans-serif);
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--color-concrete-900);
+  }
+  .case-cat {
+    margin: 0;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-concrete-600);
+  }
+  .case-img-mobile {
+    display: none;
+    width: 100%;
+    height: auto;
+    border: 2px solid var(--color-concrete-900);
+  }
+  .case-desc {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--color-concrete-900);
+  }
+  .case-meta {
+    margin: 0;
+    border-top: 2px solid var(--color-concrete-900);
+  }
+  .case-meta-row {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--color-concrete-300);
+  }
+  .case-meta-row dt {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--color-concrete-600);
+    align-self: center;
+  }
+  .case-meta-row dd {
+    margin: 0;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-concrete-900);
+  }
+  .case-actions {
+    margin-top: auto;
+    padding-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .case-cta,
+  .case-close {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.7rem 1rem;
+    border: 2px solid var(--color-concrete-900);
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease-out,
+      color 0.15s ease-out;
+  }
+  .case-cta {
+    background: var(--color-concrete-900);
+    color: var(--color-concrete-50);
+  }
+  .case-cta:hover {
+    background: var(--color-signal);
+    border-color: var(--color-signal);
+  }
+  .case-close {
+    background: transparent;
+    color: var(--color-concrete-900);
+  }
+  .case-close:hover {
+    background: var(--color-concrete-900);
+    color: var(--color-concrete-50);
+  }
+  .case-cta:focus-visible,
+  .case-close:focus-visible {
+    outline: 3px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+
+  /* The cover — swings around its LEFT edge; inner face = LEFT page */
+  .case-cover {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+  }
+  .case-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 2px solid var(--color-concrete-900);
+    overflow: hidden;
+  }
+  .case-face-front {
+    background: var(--color-concrete-900);
+    color: var(--color-concrete-50);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+  .case-front-tab {
+    position: absolute;
+    top: 0;
+    left: 12%;
+    transform: translateY(-100%);
+    background: var(--color-signal);
+    color: var(--color-concrete-50);
+    padding: 0.3rem 0.7rem;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+  }
+  .case-front-name {
+    font-family: var(--font-display, 'Anton', sans-serif);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+  .case-front-meta {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-concrete-300);
+  }
+  .case-front-label {
+    margin-top: 1.5rem;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--color-signal);
+  }
+  /* LEFT page (cover inner face) — the project image */
+  .case-face-inner {
+    transform: rotateY(180deg);
+    margin: 0;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .case-face-inner img {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    object-fit: cover;
+  }
+  .case-face-inner::before {
+    /* tape detail */
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 92px;
+    height: 22px;
+    transform: translateX(-50%) rotate(-2deg);
+    background: color-mix(in srgb, var(--color-concrete-300) 75%, transparent);
+    border: 1px solid rgb(13 12 10 / 0.15);
+  }
+  .case-face-inner figcaption {
+    padding: 0.6rem 0.9rem;
+    border-top: 2px solid var(--color-concrete-900);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--color-concrete-600);
+    background: var(--color-concrete-50);
+  }
+
+  /* Reduced motion / touch: no 3D flip — simple fade+scale ≤150ms */
+  .case-dialog.simple-open .case-spread,
+  .case-dialog.simple-open .case-assembly {
+    animation: case-simple-in 0.15s ease both;
+  }
+  @keyframes case-simple-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Mobile & simple mode share one vertical layout */
+  @media (max-width: 767px) {
+    .case-stage {
+      width: min(560px, 94vw);
+    }
+    .case-assembly {
+      width: 100%;
+      height: auto;
+      max-height: 82dvh;
+      overflow: visible;
+    }
+    .case-cover {
+      display: none;
+    }
+    .case-page {
+      position: static;
+    }
+    .case-page-inner {
+      max-height: 82dvh;
+    }
+    .case-img-mobile {
+      display: block;
+    }
+  }
+  /* JS adds .simple-open for reduced-motion users (any viewport) */
+  .case-dialog.simple-open .case-cover {
+    display: none;
+  }
+  .case-dialog.simple-open .case-page {
+    position: static;
+  }
+  .case-dialog.simple-open .case-img-mobile {
+    display: block;
+  }
+  .case-dialog.simple-open .case-assembly {
+    height: auto;
+    max-height: 82dvh;
+    overflow: visible;
+  }
+
+  /* Scroll lock while a case file is open */
+  :global(html.case-modal-open) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  import { gsap, prefersReducedMotion } from '../../utils/gsap';
+
+  const stack = document.querySelector<HTMLElement>('[data-file-stack]');
+  if (stack) {
+    const slots = Array.from(stack.querySelectorAll<HTMLElement>('.file-slot'));
+    const dialogs = Array.from(document.querySelectorAll<HTMLDialogElement>('[data-case-dialog]'));
+    const reduced = prefersReducedMotion();
+    const coarse = window.matchMedia('(max-width: 767px)').matches;
+    const simpleMode = reduced || coarse;
+    let openIdx = -1;
+    let busy = false;
+
+    // ---- warm cache: image decode + detail-page prefetch on hover/focus ----
+    const warmed = new Set<string>();
+    const warm = (slot: HTMLElement) => {
+      const slug = slot.dataset.slug ?? '';
+      const img = slot.dataset.img ?? '';
+      if (!slug || warmed.has(slug)) return;
+      warmed.add(slug);
+      if (img) {
+        const im = new Image();
+        im.src = img;
+        im.decode?.().catch(() => {});
+      }
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = `/projects/${slug}`;
+      document.head.appendChild(link);
+    };
+    stack.addEventListener('mouseover', (e) => {
+      const slot = (e.target as HTMLElement).closest<HTMLElement>('.file-slot');
+      if (slot) warm(slot);
+    });
+    stack.addEventListener('focusin', (e) => {
+      const slot = (e.target as HTMLElement).closest<HTMLElement>('.file-slot');
+      if (slot) warm(slot);
+    });
+
+    // ---- custom cursor must render above the native <dialog> top layer:
+    // move it into the open dialog, back to <body> on close ----
+    const moveCursor = (dlg: HTMLDialogElement) => {
+      const cursor = document.querySelector('[data-cursor-root]');
+      if (cursor) dlg.appendChild(cursor);
+    };
+    const moveCursorBack = () => {
+      const cursor = document.querySelector('[data-cursor-root]');
+      if (cursor) document.body.appendChild(cursor);
+    };
+
+    const coverOf = (dlg: HTMLDialogElement) => dlg.querySelector<HTMLElement>('.case-cover');
+
+    async function openCase(i: number, slot: HTMLElement) {
+      if (openIdx >= 0 || busy) return;
+      const dlg = dialogs[i];
+      if (!dlg) return;
+      openIdx = i;
+      busy = true;
+      slot.classList.add('checked-out');
+      document.documentElement.classList.add('case-modal-open');
+      moveCursor(dlg);
+      dlg.showModal();
+
+      const cover = coverOf(dlg);
+      if (simpleMode || !cover) {
+        dlg.classList.add('simple-open');
+        busy = false;
+        return;
+      }
+
+      // FLIP: pick the folder out of the pile (slot rect -> cover rect).
+      // The right page stays hidden during the flight — it must only ever be
+      // visible while the cover sits exactly on top of it, or the illusion
+      // breaks (naked page before the folder arrives).
+      const page = dlg.querySelector<HTMLElement>('.case-page');
+      if (page) gsap.set(page, { autoAlpha: 0 });
+      const r = slot.getBoundingClientRect();
+      const c = cover.getBoundingClientRect();
+      gsap.set(cover, { transformOrigin: 'top left', willChange: 'transform' });
+      await gsap
+        .fromTo(
+          cover,
+          { x: r.left - c.left, y: r.top - c.top, scaleX: r.width / c.width, scaleY: r.height / c.height },
+          { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.45, ease: 'power3.inOut' }
+        )
+        .then();
+
+      // swing the cover open while the assembly slides right half a page
+      const assembly = dlg.querySelector<HTMLElement>('.case-assembly');
+      const details = dlg.querySelectorAll<HTMLElement>('[data-case-details] > *');
+      await gsap
+        .timeline()
+        .fromTo(
+          cover,
+          { rotateY: 0 },
+          { rotateY: -180, duration: 0.55, ease: 'power2.inOut' },
+          0
+        )
+        .fromTo(assembly, { x: 0 }, { x: '50%', duration: 0.55, ease: 'power2.inOut' }, 0)
+        // reveal the page as the cover starts swinging — at rotateY(0) the
+        // cover exactly covers the page box, so the fade-in is never seen
+        .fromTo(page, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, ease: 'power1.out' }, 0)
+        .fromTo(
+          details,
+          { y: 14, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.3, stagger: 0.04 },
+          0.25
+        )
+        .then();
+
+      gsap.set(cover, { clearProps: 'willChange' });
+      busy = false;
+    }
+
+    async function closeCase() {
+      if (openIdx < 0 || busy) return;
+      const i = openIdx;
+      openIdx = -1;
+      busy = true;
+      const dlg = dialogs[i];
+      const slot = slots[i];
+      const cover = coverOf(dlg);
+
+      if (!simpleMode && cover) {
+        const assembly = dlg.querySelector<HTMLElement>('.case-assembly');
+        const details = dlg.querySelectorAll<HTMLElement>('[data-case-details] > *');
+        await gsap
+          .timeline()
+          .to(details, { autoAlpha: 0, duration: 0.15, stagger: 0.02 }, 0)
+          .to(assembly, { x: 0, duration: 0.4, ease: 'power2.inOut' }, 0)
+          .to(cover, { rotateY: 0, duration: 0.4, ease: 'power2.inOut' }, 0)
+          .then();
+        gsap.set(cover, { clearProps: 'transform,transformOrigin' });
+        gsap.set(assembly, { clearProps: 'x' });
+
+        // the closed cover now sits exactly on the page — hide the page under
+        // its cover before the folder flies home, so no naked page is left
+        // behind on the empty stage
+        const page = dlg.querySelector<HTMLElement>('.case-page');
+        if (page) gsap.set(page, { autoAlpha: 0 });
+
+        // fly back into the slot — animate from the closed-book position
+        // (identity = centered) TO the slot rect; inverting this (as it once
+        // was) teleports the folder to the pile then flies it back inside
+        const r = slot.getBoundingClientRect();
+        const c = cover.getBoundingClientRect();
+        gsap.set(cover, { transformOrigin: 'top left', willChange: 'transform' });
+        dlg.classList.add('is-closing');
+        await Promise.all([
+          gsap.fromTo(
+            cover,
+            { x: 0, y: 0, scaleX: 1, scaleY: 1 },
+            {
+              x: r.left - c.left,
+              y: r.top - c.top,
+              scaleX: r.width / c.width,
+              scaleY: r.height / c.height,
+              duration: 0.4,
+              ease: 'power3.inOut',
+            }
+          ),
+          // melt the dialog + backdrop away as the folder lands in the pile,
+          // instead of a hard cut when the top layer closes
+          gsap.to(dlg, { opacity: 0, duration: 0.4, ease: 'power2.in' }),
+        ]).then();
+        gsap.set(cover, { clearProps: 'transform,transformOrigin,willChange' });
+      }
+
+      dlg.close();
+      dlg.classList.remove('simple-open');
+      dlg.classList.remove('is-closing');
+      gsap.set(dlg, { clearProps: 'opacity' });
+      // reset the page so the next open (or simple mode) starts clean
+      dlg.querySelector('.case-page') && gsap.set(dlg.querySelector('.case-page'), { clearProps: 'all' });
+      slot.classList.remove('checked-out');
+      document.documentElement.classList.remove('case-modal-open');
+      moveCursorBack();
+      slot.focus();
+      busy = false;
+    }
+
+    slots.forEach((slot, i) => {
+      slot.addEventListener('click', (e) => {
+        // let modified clicks / non-left buttons through (new tab etc.)
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        openCase(i, slot);
+      });
+    });
+
+    dialogs.forEach((dlg) => {
+      dlg.addEventListener('cancel', (e) => {
+        // Esc — animate out instead of native instant close
+        e.preventDefault();
+        closeCase();
+      });
+      dlg.addEventListener('click', (e) => {
+        if (e.target === dlg) closeCase(); // backdrop click
+      });
+      dlg.querySelector('[data-case-close]')?.addEventListener('click', () => closeCase());
+    });
+
+    // ←/→ flip between case files while one is open
+    document.addEventListener('keydown', (e) => {
+      if (openIdx < 0 || busy) return;
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const next = (openIdx + (e.key === 'ArrowRight' ? 1 : slots.length - 1)) % slots.length;
+      void closeCase().then(() => openCase(next, slots[next]));
+    });
+  }
+</script>

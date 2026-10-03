@@ -105,6 +105,7 @@
 <div
   bind:this={rootEl}
   class="mix-blend-difference pointer-events-none fixed inset-0 z-100 opacity-0"
+  data-cursor-root
   aria-hidden="true"
 >
   <div
