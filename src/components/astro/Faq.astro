@@ -1,0 +1,129 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { gsap, prefersReducedMotion } from '../../utils/gsap';
+
+/**
+ * Direct-answer Q&A — the extractable-content play for AI Overviews / GEO.
+ * Visible text and FAQPage JSON-LD must stay in sync: answers only restate
+ * facts that exist elsewhere on the site (services, location, contact).
+ *
+ * Accordion: one item open at a time, GSAP-animated height. The native
+ * <details> toggle is left intact for no-JS (instant, still crawlable).
+ */
+const faqs = [
+  {
+    q: 'What does Raybrilliant Labs do?',
+    a: "Raybrilliant Labs is a software development studio. We design and build websites, mobile apps and MVPs — plus product design (UI/UX) and technical consulting — for clients worldwide.",
+  },
+  {
+    q: 'Where is Raybrilliant Labs based?',
+    a: "We're based in Probolinggo, East Java, Indonesia, and work remotely with clients anywhere. The fastest way to reach us is hello@raybrilliant.my.id or the contact form below.",
+  },
+  {
+    q: 'How much does a project cost?',
+    a: "Every project is quoted by scope. Tell us what you're building through the contact form and we'll reply with a fixed estimate after a short discovery call — no hourly surprises.",
+  },
+  {
+    q: 'How fast can you build an MVP?',
+    a: 'Most MVPs ship in weeks, not months. We use a bleeding-edge, efficient stack and cut scope to what actually proves the product — fast where it counts, reliable under pressure.',
+  },
+  {
+    q: 'How do we start a project?',
+    a: "Send a short brief through the contact form or email hello@raybrilliant.my.id. We'll get back within a few days with questions, a quote and a timeline.",
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+---
+
+<section id="faq" class="border-t-2 border-concrete-900 bg-concrete-50 pt-24 md:pt-36">
+  <div class="shell">
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <SectionHeading index="08" label="FAQ" lines={['QUICK', 'ANSWERS_']} />
+      <p class="mt-5 hidden font-mono text-xs tracking-widest text-concrete-600 lg:block" data-reveal>
+        [ STRAIGHT ANSWERS. NO SALES DEPARTMENT. ]
+      </p>
+    </div>
+
+    <div class="mt-12 border-t-2 border-concrete-900 md:mt-16" data-reveal-group>
+      {
+        faqs.map((f) => (
+          <details class="faq-item group border-b-2 border-concrete-900" data-reveal-item>
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-5 font-mono text-sm font-bold uppercase tracking-widest text-concrete-900 transition-colors duration-100 hover:text-signal md:py-6 md:text-base [&::-webkit-details-marker]:hidden">
+              <span>{f.q}</span>
+              <span
+                aria-hidden="true"
+                class="shrink-0 text-signal transition-transform duration-300 ease-out group-open:rotate-45"
+              >
+                [+]
+              </span>
+            </summary>
+            <div class="faq-panel overflow-hidden">
+              <p class="max-w-3xl pb-6 leading-relaxed text-concrete-900">{f.a}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap, prefersReducedMotion } from '../../utils/gsap';
+
+  const items = Array.from(document.querySelectorAll<HTMLDetailsElement>('#faq .faq-item'));
+  if (items.length && !prefersReducedMotion()) {
+    const panelOf = (d: HTMLDetailsElement) => d.querySelector<HTMLElement>('.faq-panel')!;
+
+    const open = (d: HTMLDetailsElement) => {
+      d.open = true;
+      const p = panelOf(d);
+      gsap.killTweensOf(p);
+      gsap.fromTo(
+        p,
+        { height: 0, opacity: 0 },
+        { height: 'auto', opacity: 1, duration: 0.4, ease: 'power3.out', clearProps: 'height,opacity' }
+      );
+    };
+
+    const close = (d: HTMLDetailsElement) => {
+      const p = panelOf(d);
+      gsap.killTweensOf(p);
+      gsap.to(p, {
+        height: 0,
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power3.inOut',
+        onComplete: () => {
+          d.open = false;
+          gsap.set(p, { clearProps: 'all' });
+        },
+      });
+    };
+
+    items.forEach((d) => {
+      d.querySelector('summary')?.addEventListener('click', (e) => {
+        e.preventDefault(); // take over from the native instant toggle
+        // accordion: anything else already open closes first
+        items.forEach((other) => {
+          if (other !== d && other.open) close(other);
+        });
+        if (d.open) {
+          close(d);
+        } else {
+          open(d);
+        }
+      });
+    });
+  }
+</script>
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

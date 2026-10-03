@@ -27,12 +27,26 @@ interface Props {
   description: string;
   /** Path or absolute URL of the social-share image. */
   image?: string;
+  /** Intrinsic dimensions of `image` (default: the 1200×630 og.png). */
+  imageWidth?: string;
+  imageHeight?: string;
   ogType?: 'website' | 'article';
   /** Keep utility pages (404, etc.) out of the index but crawlable. */
   noindex?: boolean;
+  /** Extra schema.org nodes appended to the site-wide @graph. */
+  schema?: object[];
 }
 
-const { title, description, image = '/og.png', ogType = 'website', noindex = false } = Astro.props;
+const {
+  title,
+  description,
+  image = '/og.png',
+  imageWidth = '1200',
+  imageHeight = '630',
+  ogType = 'website',
+  noindex = false,
+  schema = [],
+} = Astro.props;
 
 const site = Astro.site ?? new URL('https://labs.raybrilliant.my.id');
 const canonical = new URL(Astro.url.pathname, site);
@@ -66,6 +80,32 @@ const jsonLd = {
       inLanguage: 'en',
       publisher: { '@id': `${site.href}#org` },
     },
+    {
+      // Local-business flavor of the org — grounds the studio in Probolinggo
+      // for "software house / dev studio" queries and AI answers alike.
+      '@type': 'ProfessionalService',
+      '@id': `${site.href}#service`,
+      name: 'Raybrilliant Labs',
+      url: site.href,
+      email: 'hello@raybrilliant.my.id',
+      image: new URL('/og.png', site).href,
+      areaServed: 'Worldwide',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Probolinggo',
+        addressRegion: 'East Java',
+        addressCountry: 'ID',
+      },
+      knowsAbout: [
+        'Web Development',
+        'Mobile Apps',
+        'MVP Development',
+        'Product Design',
+        'UI/UX',
+        'Technical Consulting',
+      ],
+    },
+    ...schema,
   ],
 };
 ---
@@ -99,8 +139,8 @@ const jsonLd = {
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical.href} />
     <meta property="og:image" content={ogImage} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:width" content={imageWidth} />
+    <meta property="og:image:height" content={imageHeight} />
     <meta property="og:image:alt" content="Raybrilliant Labs — software development studio in Probolinggo, Indonesia" />
 
     <!-- Twitter / X -->

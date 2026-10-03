@@ -32,11 +32,34 @@ const typefaceClass: Record<TypefaceEntry['kind'], string> = {
   mono: 'font-mono',
   body: 'font-sans',
 };
+
+// Per-project schema — creator/publisher resolve against the #org node that
+// BaseLayout renders in the same @graph.
+const siteUrl = Astro.site ?? new URL('https://labs.raybrilliant.my.id');
+const pageUrl = new URL(`/projects/${project.slug}`, siteUrl);
+const creativeWork = {
+  '@type': 'CreativeWork',
+  '@id': `${pageUrl.href}#work`,
+  name: project.name,
+  headline: project.name,
+  description: project.desc || project.briefIntro,
+  image: new URL(project.img, siteUrl).href,
+  url: pageUrl.href,
+  dateCreated: project.year,
+  inLanguage: 'en',
+  creator: { '@id': `${siteUrl.href}#org` },
+  publisher: { '@id': `${siteUrl.href}#org` },
+};
 ---
 
 <BaseLayout
   title={`${project.name} — CASE STUDY ${caseNo} — RAYBRILLIANT LABS`}
-  description={project.desc}
+  description={project.desc || project.briefIntro}
+  image={project.img}
+  imageWidth="1200"
+  imageHeight="900"
+  ogType="article"
+  schema={[creativeWork]}
 >
   <main class="bg-concrete-50">
     <!-- case file bar -->

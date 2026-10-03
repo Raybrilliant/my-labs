@@ -6,6 +6,7 @@ import Projects from "../components/astro/Projects.astro";
 import Clients from "../components/astro/Clients.astro";
 import Team from "../components/astro/Team.astro";
 import Contact from "../components/astro/Contact.astro";
+import Faq from "../components/astro/Faq.astro";
 import Footer from "../components/astro/Footer.astro";
 import Hero from "../components/svelte/Hero.svelte";
 import Services from "../components/svelte/Services.svelte";
@@ -20,7 +21,7 @@ const { services, clients } = await readContent();
 
 <BaseLayout
     title="Raybrilliant Labs — Software Development Studio"
-    description="Raybrilliant Labs is a software development studio in Probolinggo, Indonesia, building websites, mobile apps and MVPs that don't look like everyone else's. Bold design, clean engineering, shipped fast."
+    description="Software development studio in Probolinggo, Indonesia. Websites, mobile apps and MVPs with bold design and clean engineering — shipped fast."
 >
     <Nav />
 
@@ -55,6 +56,8 @@ const { services, clients } = await readContent();
         <Team />
 
         <Contact />
+
+        <Faq />
     </main>
 
     <Footer />
