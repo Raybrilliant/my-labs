@@ -349,14 +349,22 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
   let running = false;
   let inView = true;
   let elapsed = reduced ? 10 : 0;
+  let frameAcc = 0;
 
   const tick = () => {
     raf = requestAnimationFrame(tick);
     const rawDt = clock.getDelta();
     evaluatePerf(rawDt);
 
-    // Optional fps cap — skip whole frames on low-end devices.
-    if (FRAME_BUDGET && rawDt < FRAME_BUDGET) return;
+    // Optional fps cap — skip whole frames on low-end devices. Accumulate
+    // elapsed time and only render once the budget has built up; comparing
+    // rawDt directly is inverted (60Hz frames are ALWAYS < the 30fps budget,
+    // so every frame was skipped and the canvas never animated).
+    if (FRAME_BUDGET) {
+      frameAcc += rawDt;
+      if (frameAcc < FRAME_BUDGET) return;
+      frameAcc = 0;
+    }
 
     const dt = Math.min(rawDt, 0.05);
     elapsed += dt;
