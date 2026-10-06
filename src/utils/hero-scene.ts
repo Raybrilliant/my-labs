@@ -9,8 +9,11 @@
  *   reconstruction (5 simplex calls per vertex, was 8)
  * - MeshStandardMaterial (no clearcoat) instead of MeshPhysicalMaterial
  * - Dynamic resolution scaling: sustained slow frames step the pixel ratio
- *   down; sustained fast frames step it back up (bounded by base DPR)
- * - 30fps cap on mobile / low-end hardware signals
+ *   down; sustained fast frames step it back up (bounded by base DPR). This
+ *   is the ONLY GPU governor — fps caps were removed because they poisoned
+ *   the perf measurement (capped loop always reads slow → DPR ratchets to
+ *   minimum and can never climb back) and produced uneven frame pacing on
+ *   high-refresh displays.
  * - Render loop pauses when the tab is hidden as well as off-screen
  */
 import {
@@ -141,13 +144,6 @@ export interface HeroSceneOptions {
 export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions): () => void {
   const reduced = prefersReducedMotion();
   const isMobile = window.matchMedia('(max-width: 767px)').matches;
-
-  // Low-end signals → cap the loop at 30fps. Motion is slow and organic,
-  // so a 30fps cap reads perfectly smooth while halving GPU/CPU work.
-  const nav = navigator as Navigator & { deviceMemory?: number };
-  const lowEnd =
-    isMobile || (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
-  const FRAME_BUDGET = lowEnd ? 1 / 30 : 0;
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(42, 1, 0.1, 100);
@@ -349,22 +345,11 @@ export function initHeroScene({ wrapEl, canvasEl, scrollFx }: HeroSceneOptions):
   let running = false;
   let inView = true;
   let elapsed = reduced ? 10 : 0;
-  let frameAcc = 0;
 
   const tick = () => {
     raf = requestAnimationFrame(tick);
     const rawDt = clock.getDelta();
     evaluatePerf(rawDt);
-
-    // Optional fps cap — skip whole frames on low-end devices. Accumulate
-    // elapsed time and only render once the budget has built up; comparing
-    // rawDt directly is inverted (60Hz frames are ALWAYS < the 30fps budget,
-    // so every frame was skipped and the canvas never animated).
-    if (FRAME_BUDGET) {
-      frameAcc += rawDt;
-      if (frameAcc < FRAME_BUDGET) return;
-      frameAcc = 0;
-    }
 
     const dt = Math.min(rawDt, 0.05);
     elapsed += dt;
